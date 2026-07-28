@@ -1,0 +1,20 @@
+# Dependencies — reinstalled in the builder stage
+node_modules
+
+# SvelteKit generated files
+.svelte-kit
+build
+
+# Dev / CI artefacts
+.git
+.github
+data
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+*.log
+
+# Docs / meta (not needed to build)
+README.md
+PLAN.md
