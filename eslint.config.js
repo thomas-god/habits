@@ -21,10 +21,12 @@ export default defineConfig(
 			// typescript-eslint strongly recommend that you do not use the no-undef lint rule on TypeScript projects.
 			// see: https://typescript-eslint.io/troubleshooting/faqs/eslint/#i-get-errors-from-the-no-undef-rule-about-global-variables-not-being-defined-even-though-there-are-no-typescript-errors
 			'no-undef': 'off',
-			// Allow a leading underscore to mark a parameter as intentionally unused,
-			// e.g. keeping a callback's full signature documented (Result#mapErr on
-			// an Ok, etc.) even when a particular branch doesn't need it.
-			'@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }]
+			// Allow underscore-prefixed unused args (e.g. intentionally-unused
+			// callback parameters that document a function's full signature).
+			'@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+			// Static <a href> links are fine without resolve(); this rule targets
+			// programmatic goto()/pushState() calls only.
+			'svelte/no-navigation-without-resolve': 'off'
 		}
 	},
 	{
