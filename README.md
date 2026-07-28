@@ -1,42 +1,56 @@
-# sv
+# 🌱 Habits
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+A self-hosted habit & progress tracker.
 
-## Creating a project
+- **Daily habits** — set a per-day target (e.g. 3 h of piano) and log units of work throughout the day
+- **Overall habits** — set a cumulative goal (e.g. 100 h of CAD this summer) and track your total amount of work done
 
-If you're seeing this, you've probably already done this step. Congrats!
+## Running with Docker Compose
 
-```sh
-# create a new project
-npx sv create my-app
+The most basic docker-compose.yaml file looks like that:
+
+```yaml
+# docker-compose.yml
+services:
+  habits:
+    image: ghcr.io/thomas-god/habits:latest
+    restart: unless-stopped
+    ports:
+      - '3000:3000'
+    volumes:
+      - habits_data:/data # SQLite database persisted on the volume
+    environment:
+      ORIGIN: https://habits.example.com # set to your public URL
+
+volumes:
+  habits_data:
 ```
 
-To recreate this project with the same configuration:
+### Environment variables
 
-```sh
-# recreate this project
-npx sv@0.16.6 create --template minimal --types ts --add prettier eslint vitest="usages:unit,component" tailwindcss="plugins:none" sveltekit-adapter="adapter:node" --install npm habits
+| Variable        | Default           | Description                                   |
+| --------------- | ----------------- | --------------------------------------------- |
+| `PORT`          | `3000`            | Port the HTTP server listens on               |
+| `HOST`          | `0.0.0.0`         | Interface to bind                             |
+| `ORIGIN`        | _(none)_          | Public URL — required when behind a proxy/TLS |
+| `DATABASE_PATH` | `/data/habits.db` | Path to the SQLite database file              |
+
+## Releases
+
+Docker images are published to the GitHub Container Registry on every `v*.*.*`
+tag push, built for `linux/amd64` and `linux/arm64`:
+
+```
+ghcr.io/thomas-god/habits:latest
+ghcr.io/thomas-god/habits:1.2.3
 ```
 
-## Developing
-
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+To create a release:
 
 ```sh
-npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
+git tag v1.0.0
+git push origin v1.0.0
 ```
 
-## Building
-
-To create a production version of your app:
-
-```sh
-npm run build
-```
-
-You can preview the production build with `npm run preview`.
-
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+The [Release workflow](.github/workflows/release.yml) will build and push the
+multi-arch image automatically.
