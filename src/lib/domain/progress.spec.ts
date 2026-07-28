@@ -5,7 +5,7 @@ import { Habit } from './habit.ts';
 import { UnitOfWork } from './unit-of-work.ts';
 import { Entry } from './entry.ts';
 import { HabitId } from './ids.ts';
-import { dailyProgress, overallProgress, totalUnits } from './progress.ts';
+import { dailyProgress, overallProgress, progressFor, totalUnits } from './progress.ts';
 import { expectOk } from '../shared/testing.ts';
 
 const unit = expectOk(UnitOfWork.ofMinutes(60));
@@ -105,5 +105,35 @@ describe('overallProgress', () => {
 
 	it('throws for a habit with a daily goal (programmer error)', () => {
 		expect(() => overallProgress(daily(3), 1, today)).toThrow();
+	});
+});
+
+describe('progressFor', () => {
+	const today = expectOk(Day.fromISO('2024-06-10'));
+	const habitId = HabitId.generate();
+
+	it("dispatches to dailyProgress using only today's entry", () => {
+		const entries = [
+			expectOk(Entry.create({ habitId, day: expectOk(Day.fromISO('2024-06-09')), units: 5 })),
+			expectOk(Entry.create({ habitId, day: today, units: 2 }))
+		];
+		const p = progressFor(daily(3), entries, today);
+		expect(p.kind).toBe('daily');
+		expect(p.doneUnits).toBe(2);
+	});
+
+	it('defaults to zero done units when there is no entry for today', () => {
+		const p = progressFor(daily(3), [], today);
+		expect(p.doneUnits).toBe(0);
+	});
+
+	it('dispatches to overallProgress summing every entry', () => {
+		const entries = [
+			expectOk(Entry.create({ habitId, day: expectOk(Day.fromISO('2024-06-09')), units: 5 })),
+			expectOk(Entry.create({ habitId, day: today, units: 2 }))
+		];
+		const p = progressFor(overall(100), entries, today);
+		expect(p.kind).toBe('overall');
+		expect(p.doneUnits).toBe(7);
 	});
 });

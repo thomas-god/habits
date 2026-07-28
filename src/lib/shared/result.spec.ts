@@ -12,13 +12,29 @@ describe('Result', () => {
 	});
 
 	it('maps success and leaves error untouched', () => {
-		expect(ok<number, string>(2).map((n) => n * 3).unwrap()).toBe(6);
-		expect(err<string, number>('e').map((n) => n * 3).unwrapErr()).toBe('e');
+		expect(
+			ok<number, string>(2)
+				.map((n) => n * 3)
+				.unwrap()
+		).toBe(6);
+		expect(
+			err<string, number>('e')
+				.map((n) => n * 3)
+				.unwrapErr()
+		).toBe('e');
 	});
 
 	it('mapErr transforms only the error', () => {
-		expect(err<string, number>('e').mapErr((s) => s.toUpperCase()).unwrapErr()).toBe('E');
-		expect(ok<number, string>(1).mapErr((s) => s + '!').unwrap()).toBe(1);
+		expect(
+			err<string, number>('e')
+				.mapErr((s) => s.toUpperCase())
+				.unwrapErr()
+		).toBe('E');
+		expect(
+			ok<number, string>(1)
+				.mapErr((s) => s + '!')
+				.unwrap()
+		).toBe(1);
 	});
 
 	it('andThen chains fallible operations and short-circuits on error', () => {

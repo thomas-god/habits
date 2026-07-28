@@ -20,18 +20,18 @@ reserved for genuine programmer errors / broken preconditions (the Rust
 
 A thing the user wants to make progress on. Each habit defines a **unit of
 work** — the granularity of a single recordable chunk (e.g. `45'`, `1h`).
-Progress is always recorded as a *number of units* on a given day.
+Progress is always recorded as a _number of units_ on a given day.
 
 Every habit has a **start date** and an **optional end date**. The end date
-doubles as both a deadline you set up front *and* the marker used for
+doubles as both a deadline you set up front _and_ the marker used for
 archiving (see below). A habit is **active** when today is within
 `[startDate, endDate]` (or `endDate` is unset).
 
 Two habit types:
 
-1. **Daily goal** — a target amount of work *per day*
+1. **Daily goal** — a target amount of work _per day_
    (e.g. "3h of piano every day"). Success is evaluated day-by-day.
-2. **Overall goal** — a target *total* amount of work over the whole life of
+2. **Overall goal** — a target _total_ amount of work over the whole life of
    the habit (e.g. "spend 100h this summer learning CAD"). Success is
    cumulative and can be paced against the end date when one is set.
 
@@ -40,7 +40,7 @@ Two habit types:
 There is no separate "archived" flag. **Archiving a habit sets its `endDate`
 to the date of the archive action** (today), so it stops being active from
 that day on while its history is preserved. "Active" vs. "ended" is therefore
-always *derived* from the dates + the clock, keeping a single source of truth.
+always _derived_ from the dates + the clock, keeping a single source of truth.
 
 ### Unit of work
 
@@ -101,16 +101,20 @@ src/lib/
     ports/
       habit-repository.ts      # driven port: persistence interface for habits
       entry-repository.ts      # driven port: persistence interface for entries
-      clock.ts                 # driven port: "today" / now (testability)
+      clock.ts                 # driven port: today() / now() (testability)
+      errors.ts                # ApplicationError, HabitNotFound, CorruptRecord
     use-cases/
       create-habit.ts
-      record-entry.ts          # add/adjust units for a habit on a day
+      record-entry.ts          # set an absolute count OR nudge by a delta (upsert)
       list-habits-with-progress.ts
       get-habit-detail.ts
       edit-habit.ts
       archive-habit.ts
       delete-habit.ts
-    dto.ts                     # input/output data shapes for use cases
+    dto.ts                     # input/output data shapes for use cases (HabitDTO, EntryDTO, ...)
+    mappers.ts                 # domain object -> DTO (toHabitDTO, toEntryDTO)
+    parsing.ts                 # raw-input -> value objects, shared by create/edit
+    testing.ts                 # in-memory fake repositories + FixedClock, for use-case tests
 
   infrastructure/
     db/
@@ -126,6 +130,7 @@ src/lib/
 ```
 
 Notes:
+
 - **Domain** contains no `node:sqlite`, no SvelteKit, no dates-as-strings
   leaking framework concerns — only rich types and behaviour.
 - **Application** orchestrates domain objects and depends on **ports**, never
@@ -146,7 +151,7 @@ Notes:
   arithmetic (compare, `daysUntil`, `plusDays`) delegate to Temporal rather
   than hand-rolled math; we keep only a strict `YYYY-MM-DD` format guard and
   the domain vocabulary. Keeps date handling in one place.
-- **`Goal`** — sum type (the *target*, independent of scheduling):
+- **`Goal`** — sum type (the _target_, independent of scheduling):
   - `DailyGoal { targetUnits }`
   - `OverallGoal { targetUnits }`
 - **`Habit`** — entity: `id`, `name`, `unitOfWork`, `goal`, `startDate: Day`,
@@ -164,7 +169,7 @@ Notes:
     (`HabitId.generate()`). A habit needs a surrogate because two habits can
     share every attribute yet be distinct. Persistence stores the UUID as the
     key; any DB integer `rowid` is an infra-only artifact never surfaced.
-  - `EntryKey` — the *natural composite* identity `(habitId, day)`. An entry
+  - `EntryKey` — the _natural composite_ identity `(habitId, day)`. An entry
     is uniquely identified by its habit and day ("at most one entry per habit
     per day"), so it needs no surrogate id.
 - **`Entry`** — entity keyed by `(habitId, day)`: `habitId: HabitId`,
@@ -187,7 +192,9 @@ Rehydration is not trusted. Following "parse, don't validate", `Habit.from` is
 the single gate for constructing a habit from any source; there is no
 create-vs-restore split. Corrupt persisted data is therefore rejected at the
 boundary (as a `Result` error) instead of propagating a broken entity. (`Entry`
-likewise has one `Entry.create`/`restore` path that validates units.)
+likewise has one `Entry.create`/`restore` path that validates units.) The
+application layer's `HabitRepository`/`EntryRepository` reads propagate this as
+a typed `CorruptRecord` error (see below).
 
 ## Persistence (infrastructure detail)
 
@@ -195,27 +202,34 @@ Relational schema owned by the SQLite adapters (not the domain):
 
 ```
 habit
-  id            INTEGER PRIMARY KEY
+  id            TEXT PRIMARY KEY          -- HabitId (UUID), assigned by the domain
   name          TEXT NOT NULL
   type          TEXT NOT NULL CHECK (type IN ('daily', 'overall'))
   unit_minutes  INTEGER NOT NULL          -- length of one unit of work
   goal_units    INTEGER NOT NULL          -- daily target OR overall target
-  start_date    TEXT                      -- ISO date, for overall habits
-  end_date      TEXT                      -- ISO date deadline, optional
-  created_at    TEXT NOT NULL
+  start_date    TEXT NOT NULL             -- ISO date
+  end_date      TEXT                      -- ISO date deadline/archive marker, optional
+  created_at    TEXT NOT NULL             -- ISO instant
 
 entry
-  id            INTEGER PRIMARY KEY
-  habit_id      INTEGER NOT NULL REFERENCES habit(id) ON DELETE CASCADE
+  habit_id      TEXT NOT NULL REFERENCES habit(id) ON DELETE CASCADE
   day           TEXT NOT NULL             -- ISO date (YYYY-MM-DD)
   units         INTEGER NOT NULL          -- units of work done that day
-  UNIQUE(habit_id, day)
+  PRIMARY KEY (habit_id, day)
 ```
 
 Notes:
+
+- `habit.id` is `TEXT PRIMARY KEY` (the domain's UUID `HabitId`), not an
+  autoincrement integer: identity is a domain concept the database stores,
+  not one it assigns (see "Identity" above). No surrogate `entry.id` exists
+  either — `(habit_id, day)` is both the natural key and the `UNIQUE`
+  constraint, matching the domain's `EntryKey`.
 - One `entry` row per (habit, day); recording again updates the count.
 - `ON DELETE CASCADE` cleans entries when a habit is deleted.
-- Repository adapters map rows <-> domain objects (mappers kept in infra).
+- Repository adapters map rows <-> domain objects via `Habit.from`/
+  `Entry.create`, surfacing a failed parse as `CorruptRecord` rather than
+  trusting the row (mappers kept in infra).
 - `start_date` is always set; `end_date` NULL means the habit has no deadline
   and is not archived. Archiving simply writes today's date into `end_date`.
 - "Active" is not stored: it is computed from `start_date`/`end_date` vs. the
@@ -223,18 +237,39 @@ Notes:
 
 ## Application layer (use cases)
 
-Each use case is a small function/class taking its required ports + a plain
-input DTO, returning a plain output DTO (never leaking domain objects to the
-UI directly — the UI receives serialisable view data).
+Each use case is a plain async function `(deps, input) => Promise<Result<Output, Error>>`:
+`deps` is the ports it needs (`HabitRepository`, `EntryRepository`, `Clock`),
+`input`/`Output` are plain DTOs (`dto.ts`) — domain objects never leak to the
+UI. The composition root (a later step) partially applies `deps` so
+`server/app.ts` exposes plain `(input) => Promise<Result<...>>` functions.
 
-- `createHabit(input)` — validate + build `Habit`, persist.
-- `recordEntry(input)` — add/subtract units for a habit on a day (upsert).
-- `listHabitsWithProgress(today)` — active habits + computed progress.
-- `getHabitDetail(id)` — habit + history + progress over time.
-- `editHabit(input)` — update name/target/dates.
-- `archiveHabit(id, today)` — set the habit's `endDate` to today via
-  `habit.archiveOn(today)` and persist.
-- `deleteHabit(id)` — remove the habit and its entries entirely.
+Errors are unions of `DomainError` (invalid input), `HabitNotFound` (a
+well-formed id that doesn't exist), and `CorruptRecord` (a stored row failed
+to parse) — all recoverable, hence part of the `Result`, never thrown.
+"Today"/"now" always come from the injected `Clock`, never `Day.today()`/
+`new Date()` directly, so use cases stay deterministic and testable.
+
+- `createHabit(deps, input)` — parse raw fields (`parsing.ts`), build a
+  `Habit` with a freshly generated `HabitId` and `clock.now()`, persist.
+- `recordEntry(deps, input)` — upsert an entry for a habit on a day (defaults
+  to `clock.today()`), either setting an absolute `units` count or nudging
+  the existing count by a `delta` (clamped at zero) — covers both a "log N
+  units" form and quick +/- controls with one use case.
+- `listHabitsWithProgress(deps, input?)` — every (by default, active) habit
+  paired with its `progressFor(...)` as of `clock.today()`.
+- `getHabitDetail(deps, input)` — one habit, its full history (sorted by
+  day), and its progress.
+- `editHabit(deps, input)` — update only the supplied fields (`endDate: null`
+  explicitly clears it), re-validated via `Habit.update`.
+- `archiveHabit(deps, input)` — `habit.archiveOn(clock.today())` and persist.
+- `deleteHabit(deps, input)` — remove the habit (schema cascade removes its
+  entries in the real adapter; the in-memory test fake does _not_ cascade,
+  since cascading is a persistence-schema detail, not an application rule).
+
+A domain service `progressFor(habit, entries, today)` (in `domain/progress.ts`)
+dispatches to `dailyProgress`/`overallProgress` based on the habit's goal
+kind, so this branching lives once, in the domain, not duplicated across the
+`listHabitsWithProgress`/`getHabitDetail` use cases.
 
 ## UI adapter (SvelteKit)
 
@@ -254,7 +289,9 @@ formatting helper. daisyUI cards, progress bars/radials, mobile-friendly.
 - **Domain**: pure unit tests (value objects, invariants, progress math) —
   fast, no I/O.
 - **Application**: use-case tests against **in-memory fake repositories**
-  (implementing the ports) — verifies orchestration without SQLite.
+  (`application/testing.ts`: `InMemoryHabitRepository`, `InMemoryEntryRepository`,
+  `FixedClock`, all implementing the real ports) — verifies orchestration
+  without SQLite.
 - **Infrastructure**: contract tests for SQLite repositories against a
   `:memory:` database, asserting they satisfy the port contracts.
 - All under the existing `server` vitest project.
@@ -266,8 +303,8 @@ formatting helper. daisyUI cards, progress bars/radials, mobile-friendly.
 2. **Domain**: value objects (`UnitOfWork`, `Day`, `Goal`), entities
    (`Habit` with `startDate`/optional `endDate`, `isActive`, `archiveOn`;
    `Entry`), `progress` service, `errors` + unit tests.
-3. **Application ports**: `HabitRepository`, `EntryRepository`, `Clock`.
-4. **Application use cases** + DTOs + tests using in-memory fake repos.
+3. ~~**Application ports**: `HabitRepository`, `EntryRepository`, `Clock`.~~ done.
+4. ~~**Application use cases** + DTOs + tests using in-memory fake repos.~~ done.
 5. **Infrastructure**: `database.ts` (node:sqlite) + `migrations.ts`.
 6. SQLite repository adapters + mappers + contract tests (`:memory:`).
 7. `system-clock.ts`, `container.ts` composition root, `server/app.ts`.

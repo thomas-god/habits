@@ -87,3 +87,17 @@ function ratioOf(done: number, target: number): number {
 	if (target <= 0) return 0;
 	return Math.min(1, done / target);
 }
+
+/**
+ * Progress for `habit` given its recorded `entries`, computed as of `today`.
+ * Dispatches to `dailyProgress` (using today's entry, if any) or
+ * `overallProgress` (summing all entries) based on the habit's goal kind, so
+ * callers don't need to duplicate that branching.
+ */
+export function progressFor(habit: Habit, entries: readonly Entry[], today: Day): Progress {
+	if (habit.kind === 'daily') {
+		const todaysEntry = entries.find((entry) => entry.day.equals(today));
+		return dailyProgress(habit, todaysEntry?.units ?? 0);
+	}
+	return overallProgress(habit, totalUnits(entries), today);
+}
