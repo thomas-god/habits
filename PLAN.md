@@ -118,12 +118,12 @@ src/lib/
 
   infrastructure/
     db/
-      database.ts              # node:sqlite DatabaseSync singleton + config
-      migrations.ts            # schema creation / migrations
-    sqlite-habit-repository.ts # adapter implementing HabitRepository
-    sqlite-entry-repository.ts # adapter implementing EntryRepository
-    system-clock.ts            # adapter implementing Clock
-    container.ts               # composition root: wires ports -> adapters
+      database.ts                 # node:sqlite DatabaseSync singleton + config
+      migrations.ts               # schema creation / migrations
+      sqlite-habit-repository.ts  # adapter implementing HabitRepository
+      sqlite-entry-repository.ts  # adapter implementing EntryRepository
+    system-clock.ts               # adapter implementing Clock
+    container.ts                  # composition root: wires ports -> adapters
 
   server/
     app.ts                     # exposes wired use cases to SvelteKit (imports container)
