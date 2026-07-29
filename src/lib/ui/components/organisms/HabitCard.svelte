@@ -26,21 +26,23 @@
 			<UnitGrid done={today.units} target={none()} />
 		{/if}
 
-		<!-- +/- controls -->
-		<div class="join">
-			<form method="POST" action="?/record" use:enhance class="join-item">
-				<input type="hidden" name="habitId" value={habit.id} />
-				<input type="hidden" name="delta" value="-1" />
-				<button class="btn btn-square btn-ghost btn-sm" aria-label="Remove one unit">−</button>
-			</form>
-			<div class="join-item p-2 text-sm text-base-content/60">
-				{formatUnit(habit.unitMinutes)}
+		<div class="flex flex-row">
+			<!-- +/- controls -->
+			<div class="join">
+				<form method="POST" action="?/record" use:enhance class="join-item">
+					<input type="hidden" name="habitId" value={habit.id} />
+					<input type="hidden" name="delta" value="-1" />
+					<button class="btn btn-ghost btn-sm" aria-label="Remove one unit">−</button>
+				</form>
+				<div class="join-item p-2 text-sm">
+					{formatUnit(habit.unitMinutes)}
+				</div>
+				<form method="POST" action="?/record" use:enhance class="join-item">
+					<input type="hidden" name="habitId" value={habit.id} />
+					<input type="hidden" name="delta" value="1" />
+					<button class="btn btn-ghost btn-sm" aria-label="Add one unit">+</button>
+				</form>
 			</div>
-			<form method="POST" action="?/record" use:enhance class="join-item">
-				<input type="hidden" name="habitId" value={habit.id} />
-				<input type="hidden" name="delta" value="1" />
-				<button class="btn btn-primary btn-sm" aria-label="Add one unit">+</button>
-			</form>
 			<div class="ml-auto">
 				<a href="/habits/{habit.id}" class="btn btn-ghost btn-xs">Details →</a>
 			</div>
