@@ -31,6 +31,11 @@ export interface HabitProgressDTO {
 	readonly progress: Progress;
 }
 
+export interface HabitWithTodayEntryDTO {
+	readonly habit: HabitDTO;
+	readonly today: EntryDTO;
+}
+
 export interface HabitDetailDTO {
 	readonly habit: HabitDTO;
 	readonly progress: Progress;

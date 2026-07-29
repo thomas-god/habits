@@ -6,6 +6,7 @@ import { getHabitDetail } from '../application/use-cases/get-habit-detail.ts';
 import { editHabit } from '../application/use-cases/edit-habit.ts';
 import { archiveHabit } from '../application/use-cases/archive-habit.ts';
 import { deleteHabit } from '../application/use-cases/delete-habit.ts';
+import { listHabitsWithTodayEntry } from '../application/use-cases/list-habits-with-today-entry.ts';
 
 /**
  * Fully-wired use cases for SvelteKit routes to import.
@@ -22,6 +23,8 @@ export const useCases = {
 	recordEntry: (input: Parameters<typeof recordEntry>[1]) => recordEntry(deps, input),
 	listHabitsWithProgress: (input?: Parameters<typeof listHabitsWithProgress>[1]) =>
 		listHabitsWithProgress(deps, input),
+	listHabitsWithTodayEntry: (input?: Parameters<typeof listHabitsWithTodayEntry>[1]) =>
+		listHabitsWithTodayEntry(deps, input),
 	getHabitDetail: (input: Parameters<typeof getHabitDetail>[1]) => getHabitDetail(deps, input),
 	editHabit: (input: Parameters<typeof editHabit>[1]) => editHabit(deps, input),
 	archiveHabit: (input: Parameters<typeof archiveHabit>[1]) => archiveHabit(deps, input),
