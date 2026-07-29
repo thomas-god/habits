@@ -3,7 +3,7 @@
 	import type { HabitWithTodayEntryDTO } from '$lib/application';
 	import { none, some } from '$lib/shared/option';
 	import { formatUnit } from '$lib/ui/format';
-	import UnitGrid from '$lib/ui/UnitGrid.svelte';
+	import UnitGrid from '$lib/ui/components/molecules/UnitGrid.svelte';
 
 	let { habitDetail }: { habitDetail: HabitWithTodayEntryDTO } = $props();
 

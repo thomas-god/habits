@@ -3,7 +3,6 @@
 	import type { ActionData, PageData } from './$types.js';
 	import type { DailyProgress, OverallProgress } from '$lib/domain/index.js';
 	import { formatDate, formatDuration, formatPercent, formatUnit } from '$lib/ui/format.js';
-	import UnitGrid from '$lib/ui/UnitGrid.svelte';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -47,7 +46,6 @@
 					{formatPercent(p.ratio)}
 				</span>
 			</div>
-			<UnitGrid kind="daily" done={p.doneUnits} target={p.targetUnits} />
 		{:else}
 			{@const p = data.progress as OverallProgress}
 			<div class="flex items-end justify-between">
@@ -61,7 +59,6 @@
 					{formatPercent(p.ratio)}
 				</span>
 			</div>
-			<UnitGrid kind="overall" done={p.doneUnits} />
 			{#if !p.met && p.daysRemaining !== null}
 				<p class="text-xs text-base-content/40">
 					{p.daysRemaining} day{p.daysRemaining === 1 ? '' : 's'} remaining · needs {formatDuration(
