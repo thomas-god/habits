@@ -3,7 +3,7 @@ import { fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types.js';
 
 export const load: PageServerLoad = async () => {
-	const result = await useCases.listHabitsWithProgress();
+	const result = await useCases.listHabitsWithTodayEntry();
 	if (!result.ok) throw new Error(result.error.message);
 	return { habits: result.value };
 };

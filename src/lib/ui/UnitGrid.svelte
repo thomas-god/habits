@@ -1,71 +1,55 @@
 <script lang="ts">
+	import { isNone, type Option } from '$lib/shared/option';
+
 	/**
 	 * Visualises units of work as a grid of small squares — a more direct
 	 * representation of actual chunks of effort than an abstract progress bar.
 	 *
-	 * Daily mode
+	 * With target = Some(number) (i.e. Daily mode)
 	 * ----------
 	 * Shows exactly `target` bordered squares.  Each unit done fills one square
 	 * from left to right (primary colour).  Units beyond the target overflow as
 	 * additional filled squares in the accent colour, so going above goal is
 	 * visually distinguishable from meeting it.
 	 *
-	 * Overall mode
+	 * With target = None (i.e. Overall mode)
 	 * ------------
 	 * Shows one filled primary square per unit done.  There is no expectation
 	 * of rendering the full remaining target (which can be hundreds of units),
-	 * so only done work is shown.  Beyond MAX_VISIBLE a "+N more" label is
-	 * appended so the count stays honest.
+	 * so only done work is shown.
 	 */
 
-	const MAX_VISIBLE = 200;
-
 	interface Props {
-		kind: 'daily' | 'overall';
+		target: Option<number>;
 		done: number;
-		/** Required for daily, ignored for overall. */
-		target?: number;
 	}
 
-	let { kind, done, target = 0 }: Props = $props();
+	let { done, target }: Props = $props();
 
-	// ── daily ──────────────────────────────────────────────────────────────────
-	// Each index maps to a square; we render max(done, target) boxes.
-	const dailyCount = $derived(Math.max(done, target));
+	type SquareOfWork = 'empty' | 'done' | 'exceeded';
 
-	type SquareKind = 'empty' | 'done' | 'over';
-	function dailyKind(i: number): SquareKind {
-		if (i >= target) return 'over'; // overflow box
-		if (i < done) return 'done'; // met-goal box
-		return 'empty'; // pending box
-	}
+	let squares: SquareOfWork[] = $derived.by(() => {
+		if (isNone(target)) {
+			return Array(done).fill('done');
+		}
 
-	// ── overall ────────────────────────────────────────────────────────────────
-	const overallVisible = $derived(Math.min(done, MAX_VISIBLE));
-	const overallOverflow = $derived(done > MAX_VISIBLE ? done - MAX_VISIBLE : 0);
+		let squares = Array(target.value).fill('empty');
+		const doneSquares = Math.min(done, target.value);
+		squares.splice(0, doneSquares, ...Array(doneSquares).fill('done'));
+		squares = squares.concat(Array(Math.max(0, done - target.value)).fill('exceeded'));
+
+		return squares;
+	});
 </script>
 
 <div class="flex flex-wrap items-center gap-1" role="img" aria-label="{done} units done">
-	{#if kind === 'daily'}
-		{#each { length: dailyCount } as _, i (i)}
-			{@const sq = dailyKind(i)}
-			<span
-				class="inline-block size-4 rounded-sm {sq === 'empty'
-					? 'border-2 border-primary/30'
-					: sq === 'done'
-						? 'bg-primary'
-						: 'bg-accent'}"
-			></span>
-		{/each}
-	{:else}
-		{#each { length: overallVisible } as _, i (i)}
-			<span
-				class="inline-block size-4 rounded-sm bg-primary"
-				style="opacity: {0.5 + (0.5 * ((i % 10) + 1)) / 10}"
-			></span>
-		{/each}
-		{#if overallOverflow > 0}
-			<span class="ml-1 text-xs text-base-content/50">+{overallOverflow} more</span>
+	{#each squares as square, idx (idx)}
+		{#if square === 'empty'}
+			<span class="inline-block size-4 rounded-sm border-2 border-primary/30"></span>
+		{:else if square === 'done'}
+			<span class="inline-block size-4 rounded-sm bg-primary"></span>
+		{:else if square === 'exceeded'}
+			<span class="inline-block size-4 rounded-sm bg-accent"></span>
 		{/if}
-	{/if}
+	{/each}
 </div>

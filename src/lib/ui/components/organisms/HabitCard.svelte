@@ -1,0 +1,49 @@
+<script lang="ts">
+	import { enhance } from '$app/forms';
+	import type { HabitWithTodayEntryDTO } from '$lib/application';
+	import { none, some } from '$lib/shared/option';
+	import { formatUnit } from '$lib/ui/format';
+	import UnitGrid from '$lib/ui/UnitGrid.svelte';
+
+	let { habitDetail }: { habitDetail: HabitWithTodayEntryDTO } = $props();
+
+	let { habit, today } = $derived(habitDetail);
+</script>
+
+<div class="card bg-base-100 shadow-sm transition-shadow hover:shadow-md">
+	<div class="card-body gap-3 p-5">
+		<!-- Header -->
+		<div class="flex items-start justify-between gap-2">
+			<div>
+				<a href="/habits/{habit.id}" class="card-title text-lg hover:underline">{habit.name}</a>
+			</div>
+		</div>
+
+		<!-- Unit grid -->
+		{#if habit.kind === 'daily'}
+			<UnitGrid done={today.units} target={some(habit.targetUnits)} />
+		{:else}
+			<UnitGrid done={today.units} target={none()} />
+		{/if}
+
+		<!-- +/- controls -->
+		<div class="join">
+			<form method="POST" action="?/record" use:enhance class="join-item">
+				<input type="hidden" name="habitId" value={habit.id} />
+				<input type="hidden" name="delta" value="-1" />
+				<button class="btn btn-square btn-ghost btn-sm" aria-label="Remove one unit">−</button>
+			</form>
+			<div class="join-item p-2 text-sm text-base-content/60">
+				{formatUnit(habit.unitMinutes)}
+			</div>
+			<form method="POST" action="?/record" use:enhance class="join-item">
+				<input type="hidden" name="habitId" value={habit.id} />
+				<input type="hidden" name="delta" value="1" />
+				<button class="btn btn-primary btn-sm" aria-label="Add one unit">+</button>
+			</form>
+			<div class="ml-auto">
+				<a href="/habits/{habit.id}" class="btn btn-ghost btn-xs">Details →</a>
+			</div>
+		</div>
+	</div>
+</div>
