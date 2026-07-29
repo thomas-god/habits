@@ -51,5 +51,7 @@
 		{:else if square === 'exceeded'}
 			<span class="inline-block size-4 rounded-sm bg-accent"></span>
 		{/if}
+	{:else}
+		<span class="inline-block size-4 rounded-sm bg-none"></span>
 	{/each}
 </div>
