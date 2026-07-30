@@ -83,7 +83,14 @@
 			<form method="POST" action="?/record" use:enhance class="flex items-end gap-3">
 				<label class="form-control flex-1">
 					<div class="label"><span class="label-text text-sm">Date</span></div>
-					<input type="date" name="day" value={today} class="input-bordered input input-sm" />
+					<input
+						type="date"
+						name="day"
+						value={today}
+						min={data.habit.startDate}
+						max={data.habit.endDate ?? undefined}
+						class="input-bordered input input-sm"
+					/>
 				</label>
 				<label class="form-control w-28">
 					<div class="label"><span class="label-text text-sm">Units</span></div>
