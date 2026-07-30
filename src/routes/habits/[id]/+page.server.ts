@@ -28,8 +28,6 @@ export const actions: Actions = {
 		const result = await useCases.editHabit({
 			habitId: params.id,
 			name: data.get('name') as string,
-			unitMinutes: Number(data.get('unitMinutes')),
-			goalKind: data.get('goalKind') as 'daily' | 'overall',
 			targetUnits: Number(data.get('targetUnits')),
 			startDate: data.get('startDate') as string,
 			endDate: endDateRaw || null

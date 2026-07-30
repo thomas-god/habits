@@ -123,9 +123,13 @@
 			<form
 				method="POST"
 				action="?/edit"
-				use:enhance
+				use:enhance={() => {
+					return async ({ result, update }) => {
+						if (result.type === 'success') editing = false;
+						await update();
+					};
+				}}
 				class="mt-3 flex flex-col gap-4"
-				onsubmit={() => (editing = false)}
 			>
 				<label class="form-control">
 					<div class="label"><span class="label-text text-sm">Name</span></div>
@@ -138,49 +142,14 @@
 					/>
 				</label>
 
-				<label class="form-control">
-					<div class="label">
-						<span class="label-text text-sm">Unit (minutes)</span>
-						<span class="label-text-alt text-base-content/50"
-							>currently {formatUnit(data.habit.unitMinutes)}</span
-						>
+				<div class="grid grid-cols-2 gap-4 text-sm">
+					<div>
+						<div class="text-base-content/50">Unit</div>
+						<div>{formatUnit(data.habit.unitMinutes)}</div>
 					</div>
-					<!--TODO: do we support/want to allow updating the unit of an existing habit ? -->
-					<!-- How do we keep the existing amount of work without having rounding errors ? -->
-					<input
-						type="number"
-						name="unitMinutes"
-						min="1"
-						step="1"
-						value={data.habit.unitMinutes}
-						class="input-bordered input input-sm"
-						required
-					/>
-				</label>
-
-				<div class="form-control">
-					<div class="label"><span class="label-text text-sm">Goal type</span></div>
-					<div class="flex gap-4">
-						<label class="label cursor-pointer gap-2">
-							<input
-								type="radio"
-								name="goalKind"
-								value="daily"
-								class="radio radio-sm radio-primary"
-								checked={data.habit.kind === 'daily'}
-							/>
-							<span class="label-text text-sm">Daily</span>
-						</label>
-						<label class="label cursor-pointer gap-2">
-							<input
-								type="radio"
-								name="goalKind"
-								value="overall"
-								class="radio radio-sm radio-primary"
-								checked={data.habit.kind === 'overall'}
-							/>
-							<span class="label-text text-sm">Overall</span>
-						</label>
+					<div>
+						<div class="text-base-content/50">Goal type</div>
+						<div class="capitalize">{data.habit.kind}</div>
 					</div>
 				</div>
 
