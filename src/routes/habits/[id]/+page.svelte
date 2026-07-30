@@ -102,35 +102,6 @@
 	</div>
 {/if}
 
-<!-- History -->
-{#if data.entries.length > 0}
-	<div class="card mb-4 bg-base-100 shadow-sm">
-		<div class="card-body p-5">
-			<h2 class="card-title text-base">History</h2>
-			<table class="table table-sm">
-				<thead>
-					<tr>
-						<th>Date</th>
-						<th class="text-right">Units</th>
-						<th class="text-right">Duration</th>
-					</tr>
-				</thead>
-				<tbody>
-					{#each [...data.entries].reverse() as entry (entry.day)}
-						<tr>
-							<td>{formatDate(entry.day)}</td>
-							<td class="text-right">{entry.units}</td>
-							<td class="text-right text-base-content/60"
-								>{formatDuration(entry.units, data.habit.unitMinutes)}</td
-							>
-						</tr>
-					{/each}
-				</tbody>
-			</table>
-		</div>
-	</div>
-{/if}
-
 <!-- Edit form -->
 <div class="card mb-4 bg-base-100 shadow-sm">
 	<div class="card-body p-5">
