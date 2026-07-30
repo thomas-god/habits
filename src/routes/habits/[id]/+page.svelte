@@ -3,6 +3,7 @@
 	import type { ActionData, PageData } from './$types.js';
 	import type { DailyProgress, OverallProgress } from '$lib/domain/index.js';
 	import { formatDate, formatDuration, formatPercent, formatUnit } from '$lib/ui/format.js';
+	import HistoryGrid from '$lib/ui/components/molecules/HistoryGrid.svelte';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -30,6 +31,9 @@
 	<div class="mb-4 alert text-sm alert-error">{form.error}</div>
 {/if}
 
+<div class="card mb-4 bg-base-100 p-5 shadow-sm">
+	<HistoryGrid habitDetails={data} />
+</div>
 <!-- Progress card -->
 <div class="card mb-4 bg-base-100 shadow-sm">
 	<div class="card-body gap-3 p-5">
