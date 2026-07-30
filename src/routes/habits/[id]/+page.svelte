@@ -31,9 +31,6 @@
 	<div class="mb-4 alert text-sm alert-error">{form.error}</div>
 {/if}
 
-<div class="card mb-4 bg-base-100 p-5 shadow-sm">
-	<HistoryGrid habitDetails={data} />
-</div>
 <!-- Progress card -->
 <div class="card mb-4 bg-base-100 shadow-sm">
 	<div class="card-body gap-3 p-5">
@@ -72,6 +69,10 @@
 				</p>
 			{/if}
 		{/if}
+
+		<div class="mt-2">
+			<HistoryGrid habitDetails={data} />
+		</div>
 	</div>
 </div>
 
