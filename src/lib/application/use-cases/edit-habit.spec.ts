@@ -32,10 +32,10 @@ describe('editHabit', () => {
 		expect(dto.targetUnits).toBe(4);
 	});
 
-	it('changes the goal kind and target together', async () => {
+	it('changes the target', async () => {
 		const { deps, habitId } = await setup();
-		const dto = expectOk(await editHabit(deps, { habitId, goalKind: 'overall', targetUnits: 100 }));
-		expect(dto.kind).toBe('overall');
+		const dto = expectOk(await editHabit(deps, { habitId, targetUnits: 100 }));
+		expect(dto.kind).toBe('daily');
 		expect(dto.targetUnits).toBe(100);
 	});
 
@@ -50,12 +50,6 @@ describe('editHabit', () => {
 		await editHabit(deps, { habitId, endDate: '2024-06-30' });
 		const dto = expectOk(await editHabit(deps, { habitId, endDate: null }));
 		expect(dto.endDate).toBeNull();
-	});
-
-	it('clears the unit of work with an explicit null', async () => {
-		const { deps, habitId } = await setup();
-		const dto = expectOk(await editHabit(deps, { habitId, unitMinutes: null }));
-		expect(dto.unitMinutes).toBeNull();
 	});
 
 	it('persists the change', async () => {

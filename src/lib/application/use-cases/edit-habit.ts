@@ -5,18 +5,16 @@ import { HabitNotFound, type CorruptRecord } from '../ports/errors.ts';
 import type { HabitRepository } from '../ports/habit-repository.ts';
 import type { HabitDTO } from '../dto.ts';
 import { toHabitDTO } from '../mappers.ts';
-import { parseGoal, parseOptionalUnitOfWork } from '../parsing.ts';
+import { parseGoal } from '../parsing.ts';
 
 /**
  * Every field is optional; only supplied fields are changed. `endDate: null`
- * and `unitMinutes: null` clear those fields (they're both optional in the
- * domain); `undefined` leaves them unchanged.
+ * clears it (it's optional in the domain); `undefined` leaves it unchanged.
+ * `goalKind` and `unitMinutes` are fixed at creation and cannot be edited.
  */
 export interface EditHabitInput {
 	habitId: string;
 	name?: string;
-	unitMinutes?: number | null;
-	goalKind?: 'daily' | 'overall';
 	targetUnits?: number;
 	startDate?: string;
 	endDate?: string | null;
@@ -41,19 +39,9 @@ export async function editHabit(
 	if (!habitResult.value) return err(new HabitNotFound(input.habitId));
 	const habit = habitResult.value;
 
-	let unitOfWork = habit.unitOfWork;
-	if (input.unitMinutes !== undefined) {
-		const unitResult = parseOptionalUnitOfWork(input.unitMinutes);
-		if (!unitResult.ok) return err(unitResult.error);
-		unitOfWork = unitResult.value;
-	}
-
 	let goal = habit.goal;
-	if (input.goalKind !== undefined || input.targetUnits !== undefined) {
-		const goalResult = parseGoal(
-			input.goalKind ?? habit.kind,
-			input.targetUnits ?? habit.goal.targetUnits
-		);
+	if (input.targetUnits !== undefined) {
+		const goalResult = parseGoal(habit.kind, input.targetUnits);
 		if (!goalResult.ok) return err(goalResult.error);
 		goal = goalResult.value;
 	}
@@ -77,7 +65,7 @@ export async function editHabit(
 		}
 	}
 
-	const updatedResult = habit.update({ name: input.name, unitOfWork, goal, startDate, endDate });
+	const updatedResult = habit.update({ name: input.name, goal, startDate, endDate });
 	if (!updatedResult.ok) return err(updatedResult.error);
 
 	await deps.habits.save(updatedResult.value);
