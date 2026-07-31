@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { HabitDetailDTO } from '$lib/application';
-	import { asOption, map, unwrapOr } from '$lib/shared/option';
+	import { asOption } from '$lib/shared/option';
 	import { parseDay, getToday } from '$lib/ui/date';
 	import dayjs from 'dayjs';
 
@@ -16,10 +16,9 @@
 		const days = [];
 		let column = 1;
 		for (let day = startDay; day <= endDay; day = day.add(1, 'day')) {
-			const units = unwrapOr(
-				map(asOption(entries.find((e) => parseDay(e.day).isSame(day))), (e) => e.units),
-				0
-			);
+			const units = asOption(entries.find((e) => parseDay(e.day).isSame(day)))
+				.map((e) => e.units)
+				.unwrapOr(0);
 
 			days.push({
 				day,

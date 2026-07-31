@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { isNone, type Option } from '$lib/shared/option';
+	import type { Option } from '$lib/shared/option';
 
 	/**
 	 * Visualises units of work as a grid of small squares — a more direct
@@ -29,7 +29,7 @@
 	type SquareOfWork = 'empty' | 'done' | 'exceeded';
 
 	let squares: SquareOfWork[] = $derived.by(() => {
-		if (isNone(target)) {
+		if (target.isNone()) {
 			return Array(done).fill('done');
 		}
 
