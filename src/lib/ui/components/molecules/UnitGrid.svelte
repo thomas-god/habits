@@ -52,6 +52,6 @@
 			<span class="inline-block size-4 rounded-sm bg-accent"></span>
 		{/if}
 	{:else}
-		<span class="inline-block size-4 rounded-sm bg-none"></span>
+		<span class="inline-block size-4 rounded-sm border-2 border-primary/30"></span>
 	{/each}
 </div>
