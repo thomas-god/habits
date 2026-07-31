@@ -5,10 +5,11 @@ import type { Actions } from './$types.js';
 export const actions: Actions = {
 	default: async ({ request }) => {
 		const data = await request.formData();
+		const unitMinutesRaw = data.get('unitMinutes') as string;
 
 		const result = await useCases.createHabit({
 			name: data.get('name') as string,
-			unitMinutes: Number(data.get('unitMinutes')),
+			unitMinutes: unitMinutesRaw ? Number(unitMinutesRaw) : null,
 			goalKind: data.get('goalKind') as 'daily' | 'overall',
 			targetUnits: Number(data.get('targetUnits')),
 			startDate: data.get('startDate') as string,

@@ -8,7 +8,7 @@ import { parseHabitFields } from '../parsing.ts';
 
 export interface CreateHabitInput {
 	name: string;
-	unitMinutes: number;
+	unitMinutes?: number | null;
 	goalKind: GoalKind;
 	targetUnits: number;
 	startDate: string;

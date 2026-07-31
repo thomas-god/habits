@@ -40,7 +40,7 @@ describe('runMigrations', () => {
 		runMigrations(db);
 		const version = (db.prepare('PRAGMA user_version').get() as { user_version: number })
 			.user_version;
-		expect(version).toBe(1);
+		expect(version).toBe(2);
 	});
 
 	it('is idempotent — running twice does not throw or change the version', () => {
@@ -48,7 +48,25 @@ describe('runMigrations', () => {
 		runMigrations(db);
 		const version = (db.prepare('PRAGMA user_version').get() as { user_version: number })
 			.user_version;
-		expect(version).toBe(1);
+		expect(version).toBe(2);
+	});
+
+	it('allows a null unit_minutes after migration 2', () => {
+		runMigrations(db);
+		db.prepare('INSERT INTO habit VALUES (?,?,?,?,?,?,?,?)').run(
+			'h1',
+			'Piano',
+			'daily',
+			null,
+			3,
+			'2024-06-01',
+			null,
+			'2024-06-01T00:00:00.000Z'
+		);
+		const row = db.prepare('SELECT unit_minutes FROM habit WHERE id = ?').get('h1') as {
+			unit_minutes: number | null;
+		};
+		expect(row.unit_minutes).toBeNull();
 	});
 
 	it('enforces ON DELETE CASCADE from habit to entry', () => {

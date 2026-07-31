@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { Day, DailyGoal, Entry, Habit, HabitId, UnitOfWork, EntryKey } from '../../domain/index.ts';
+import { some } from '../../shared/option.ts';
 import { expectOk } from '../../shared/testing.ts';
 import { CorruptRecord } from '../../application/ports/errors.ts';
 import { openDatabase } from './database.ts';
@@ -19,7 +20,7 @@ function seedHabit(db: DatabaseSync, name = 'Piano') {
 		Habit.from({
 			id: HabitId.generate(),
 			name,
-			unitOfWork: expectOk(UnitOfWork.ofMinutes(45)),
+			unitOfWork: some(expectOk(UnitOfWork.ofMinutes(45))),
 			goal: expectOk(DailyGoal.of(3)),
 			startDate: expectOk(Day.fromISO('2024-06-01')),
 			createdAt: new Date()

@@ -9,6 +9,7 @@ import {
 	UnitOfWork
 } from '../../domain/index.ts';
 import { CorruptRecord } from '../../application/ports/errors.ts';
+import { none, some } from '../../shared/option.ts';
 import { expectOk, expectErr } from '../../shared/testing.ts';
 import {
 	entryToRow,
@@ -29,7 +30,7 @@ function makeHabit(overrides: Partial<Parameters<typeof Habit.from>[0]> = {}) {
 		Habit.from({
 			id: habitId,
 			name: 'Piano',
-			unitOfWork: unit,
+			unitOfWork: some(unit),
 			goal: expectOk(DailyGoal.of(3)),
 			startDate: start,
 			createdAt,
@@ -79,6 +80,11 @@ describe('habitToRow', () => {
 		expect(row.type).toBe('overall');
 		expect(row.goal_units).toBe(100);
 	});
+
+	it('maps a habit with no unit of work to a null unit_minutes', () => {
+		const row = habitToRow(makeHabit({ unitOfWork: none() }));
+		expect(row.unit_minutes).toBeNull();
+	});
 });
 
 describe('rowToHabit', () => {
@@ -86,7 +92,7 @@ describe('rowToHabit', () => {
 		const habit = expectOk(rowToHabit(validHabitRow()));
 		expect(habit.id.value).toBe(habitId.value);
 		expect(habit.name).toBe('Piano');
-		expect(habit.unitOfWork.minutes).toBe(45);
+		expect(habit.unitOfWork.unwrap().minutes).toBe(45);
 		expect(habit.kind).toBe('daily');
 		expect(habit.goal.targetUnits).toBe(3);
 		expect(habit.startDate.toISO()).toBe('2024-06-01');
@@ -124,6 +130,11 @@ describe('rowToHabit', () => {
 
 	it('returns CorruptRecord for a zero unit_minutes', () => {
 		expect(expectErr(rowToHabit(validHabitRow({ unit_minutes: 0 })))).toBeInstanceOf(CorruptRecord);
+	});
+
+	it('round-trips a null unit_minutes as no unit of work', () => {
+		const habit = expectOk(rowToHabit(validHabitRow({ unit_minutes: null })));
+		expect(habit.unitOfWork.isNone()).toBe(true);
 	});
 });
 

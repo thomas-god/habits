@@ -35,6 +35,12 @@ const MIGRATIONS: { version: number; sql: string }[] = [
         PRIMARY KEY (habit_id, day)
       );
     `
+	},
+	{
+		version: 2,
+		sql: `
+      ALTER TABLE habit ALTER COLUMN unit_minutes DROP NOT NULL;
+    `
 	}
 ];
 

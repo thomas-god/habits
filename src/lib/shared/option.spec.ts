@@ -39,7 +39,8 @@ describe('Option', () => {
 	});
 
 	it('andThen chains optional operations and short-circuits on None', () => {
-		const parse = (s: string): Option<number> => (Number.isNaN(Number(s)) ? none() : some(Number(s)));
+		const parse = (s: string): Option<number> =>
+			Number.isNaN(Number(s)) ? none() : some(Number(s));
 		expect(some('4').andThen(parse).unwrap()).toBe(4);
 		expect(some('x').andThen(parse).isNone()).toBe(true);
 		expect(none<string>().andThen(parse).isNone()).toBe(true);
@@ -63,7 +64,8 @@ describe('Option', () => {
 	});
 
 	it('match handles both branches', () => {
-		const describe = (o: Option<number>) => o.match({ some: (n) => `some:${n}`, none: () => 'none' });
+		const describe = (o: Option<number>) =>
+			o.match({ some: (n) => `some:${n}`, none: () => 'none' });
 		expect(describe(some(1))).toBe('some:1');
 		expect(describe(none())).toBe('none');
 	});

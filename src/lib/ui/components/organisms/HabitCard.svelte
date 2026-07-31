@@ -2,12 +2,14 @@
 	import { enhance } from '$app/forms';
 	import type { HabitWithTodayEntryDTO } from '$lib/application';
 	import { none, some } from '$lib/shared/option';
-	import { formatUnit } from '$lib/ui/format';
+	import { formatUnitLabel } from '$lib/ui/format';
 	import UnitGrid from '$lib/ui/components/molecules/UnitGrid.svelte';
 
 	let { habitDetail }: { habitDetail: HabitWithTodayEntryDTO } = $props();
 
 	let { habit, today } = $derived(habitDetail);
+
+	let unitLabel = $derived(formatUnitLabel(habit.unitMinutes));
 </script>
 
 <div class="card bg-base-100 shadow-sm transition-shadow hover:shadow-md">
@@ -34,9 +36,11 @@
 					<input type="hidden" name="delta" value="-1" />
 					<button class="btn btn-ghost btn-sm" aria-label="Remove one unit">−</button>
 				</form>
-				<div class="join-item p-2 text-sm">
-					{formatUnit(habit.unitMinutes)}
-				</div>
+				{#if unitLabel.isSome()}
+					<div class="join-item p-2 text-sm">
+						{unitLabel.value}
+					</div>
+				{/if}
 				<form method="POST" action="?/record" use:enhance class="join-item">
 					<input type="hidden" name="habitId" value={habit.id} />
 					<input type="hidden" name="delta" value="1" />

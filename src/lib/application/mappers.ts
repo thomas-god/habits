@@ -6,7 +6,7 @@ export function toHabitDTO(habit: Habit, today: Day): HabitDTO {
 	return {
 		id: habit.id.value,
 		name: habit.name,
-		unitMinutes: habit.unitOfWork.minutes,
+		unitMinutes: habit.unitOfWork.match({ some: (u) => u.minutes, none: () => null }),
 		kind: habit.kind,
 		targetUnits: habit.goal.targetUnits,
 		startDate: habit.startDate.toISO(),

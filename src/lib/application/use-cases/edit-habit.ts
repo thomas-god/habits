@@ -1,17 +1,21 @@
-import { Day, HabitId, UnitOfWork, type DomainError } from '../../domain/index.ts';
+import { Day, HabitId, type DomainError } from '../../domain/index.ts';
 import { err, ok, type Result } from '../../shared/result.ts';
 import type { Clock } from '../ports/clock.ts';
 import { HabitNotFound, type CorruptRecord } from '../ports/errors.ts';
 import type { HabitRepository } from '../ports/habit-repository.ts';
 import type { HabitDTO } from '../dto.ts';
 import { toHabitDTO } from '../mappers.ts';
-import { parseGoal } from '../parsing.ts';
+import { parseGoal, parseOptionalUnitOfWork } from '../parsing.ts';
 
-/** Every field is optional; only supplied fields are changed. `endDate: null` clears it. */
+/**
+ * Every field is optional; only supplied fields are changed. `endDate: null`
+ * and `unitMinutes: null` clear those fields (they're both optional in the
+ * domain); `undefined` leaves them unchanged.
+ */
 export interface EditHabitInput {
 	habitId: string;
 	name?: string;
-	unitMinutes?: number;
+	unitMinutes?: number | null;
 	goalKind?: 'daily' | 'overall';
 	targetUnits?: number;
 	startDate?: string;
@@ -39,7 +43,7 @@ export async function editHabit(
 
 	let unitOfWork = habit.unitOfWork;
 	if (input.unitMinutes !== undefined) {
-		const unitResult = UnitOfWork.ofMinutes(input.unitMinutes);
+		const unitResult = parseOptionalUnitOfWork(input.unitMinutes);
 		if (!unitResult.ok) return err(unitResult.error);
 		unitOfWork = unitResult.value;
 	}

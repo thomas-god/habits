@@ -11,7 +11,7 @@ import type { GoalKind, Progress } from '../domain/index.ts';
 export interface HabitDTO {
 	readonly id: string;
 	readonly name: string;
-	readonly unitMinutes: number;
+	readonly unitMinutes: number | null;
 	readonly kind: GoalKind;
 	readonly targetUnits: number;
 	readonly startDate: string;

@@ -1,3 +1,4 @@
+import type { Option } from '../shared/option.ts';
 import { err, ok, type Result } from '../shared/result.ts';
 import { Day } from './day.ts';
 import { InvalidHabit } from './errors.ts';
@@ -21,7 +22,7 @@ import { UnitOfWork } from './unit-of-work.ts';
 export class Habit {
 	readonly id: HabitId;
 	readonly name: string;
-	readonly unitOfWork: UnitOfWork;
+	readonly unitOfWork: Option<UnitOfWork>;
 	readonly goal: Goal;
 	readonly startDate: Day;
 	readonly endDate: Day | null;
@@ -30,7 +31,7 @@ export class Habit {
 	private constructor(params: {
 		id: HabitId;
 		name: string;
-		unitOfWork: UnitOfWork;
+		unitOfWork: Option<UnitOfWork>;
 		goal: Goal;
 		startDate: Day;
 		endDate: Day | null;
@@ -63,7 +64,7 @@ export class Habit {
 	static from(params: {
 		id: HabitId;
 		name: string;
-		unitOfWork: UnitOfWork;
+		unitOfWork: Option<UnitOfWork>;
 		goal: Goal;
 		startDate: Day;
 		endDate?: Day | null;
@@ -106,7 +107,7 @@ export class Habit {
 	/** A copy with fields changed; re-checks invariants. */
 	update(changes: {
 		name?: string;
-		unitOfWork?: UnitOfWork;
+		unitOfWork?: Option<UnitOfWork>;
 		goal?: Goal;
 		startDate?: Day;
 		endDate?: Day | null;

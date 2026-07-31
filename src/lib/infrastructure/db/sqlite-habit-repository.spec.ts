@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { Day, DailyGoal, Habit, HabitId, OverallGoal, UnitOfWork } from '../../domain/index.ts';
 import { CorruptRecord } from '../../application/ports/errors.ts';
+import { some } from '../../shared/option.ts';
 import { expectOk } from '../../shared/testing.ts';
 import { openDatabase } from './database.ts';
 import { runMigrations } from './migrations.ts';
@@ -18,7 +19,7 @@ function makeHabit(db: DatabaseSync, overrides: Partial<Parameters<typeof Habit.
 		Habit.from({
 			id: HabitId.generate(),
 			name: 'Piano',
-			unitOfWork: expectOk(UnitOfWork.ofMinutes(45)),
+			unitOfWork: some(expectOk(UnitOfWork.ofMinutes(45))),
 			goal: expectOk(DailyGoal.of(3)),
 			startDate: expectOk(Day.fromISO('2024-06-01')),
 			createdAt: new Date('2024-06-01T00:00:00.000Z'),

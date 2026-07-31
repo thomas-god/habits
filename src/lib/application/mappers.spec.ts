@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { Day, DailyGoal, Entry, Habit, HabitId, OverallGoal, UnitOfWork } from '../domain/index.ts';
+import { none, some } from '../shared/option.ts';
 import { expectOk } from '../shared/testing.ts';
 import { toEntryDTO, toHabitDTO } from './mappers.ts';
 
@@ -12,7 +13,7 @@ function makeHabit(overrides: Partial<Parameters<typeof Habit.from>[0]> = {}) {
 		Habit.from({
 			id: HabitId.generate(),
 			name: 'Piano',
-			unitOfWork: unit,
+			unitOfWork: some(unit),
 			goal: expectOk(DailyGoal.of(3)),
 			startDate: start,
 			createdAt,
@@ -66,6 +67,12 @@ describe('toHabitDTO', () => {
 		const dto = toHabitDTO(habit, start);
 		expect(dto.kind).toBe('overall');
 		expect(dto.targetUnits).toBe(100);
+	});
+
+	it('maps a habit with no unit of work to a null unitMinutes', () => {
+		const habit = makeHabit({ unitOfWork: none() });
+		const dto = toHabitDTO(habit, start);
+		expect(dto.unitMinutes).toBeNull();
 	});
 });
 

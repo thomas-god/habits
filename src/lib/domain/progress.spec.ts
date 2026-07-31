@@ -6,6 +6,7 @@ import { UnitOfWork } from './unit-of-work.ts';
 import { Entry } from './entry.ts';
 import { HabitId } from './ids.ts';
 import { dailyProgress, overallProgress, progressFor, totalUnits } from './progress.ts';
+import { some } from '../shared/option.ts';
 import { expectOk } from '../shared/testing.ts';
 
 const unit = expectOk(UnitOfWork.ofMinutes(60));
@@ -16,7 +17,7 @@ function daily(target: number) {
 		Habit.from({
 			id: HabitId.generate(),
 			name: 'Piano',
-			unitOfWork: unit,
+			unitOfWork: some(unit),
 			goal: expectOk(DailyGoal.of(target)),
 			startDate: start,
 			createdAt: new Date()
@@ -29,7 +30,7 @@ function overall(target: number, endDate: Day | null = null) {
 		Habit.from({
 			id: HabitId.generate(),
 			name: 'CAD',
-			unitOfWork: unit,
+			unitOfWork: some(unit),
 			goal: expectOk(OverallGoal.of(target)),
 			startDate: start,
 			endDate,

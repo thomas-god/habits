@@ -52,6 +52,12 @@ describe('editHabit', () => {
 		expect(dto.endDate).toBeNull();
 	});
 
+	it('clears the unit of work with an explicit null', async () => {
+		const { deps, habitId } = await setup();
+		const dto = expectOk(await editHabit(deps, { habitId, unitMinutes: null }));
+		expect(dto.unitMinutes).toBeNull();
+	});
+
 	it('persists the change', async () => {
 		const { deps, habitId } = await setup();
 		await editHabit(deps, { habitId, name: 'Guitar' });

@@ -7,6 +7,7 @@ import {
 	type Goal,
 	type GoalKind
 } from '../domain/index.ts';
+import { none, some, type Option } from '../shared/option.ts';
 import { err, ok, type Result } from '../shared/result.ts';
 
 /**
@@ -27,8 +28,16 @@ export function parseOptionalDay(
 	return Day.fromISO(value);
 }
 
+/** `undefined`/`null` parse to "no unit of work"; otherwise a valid minute count. */
+export function parseOptionalUnitOfWork(
+	value: number | null | undefined
+): Result<Option<UnitOfWork>, DomainError> {
+	if (value === null || value === undefined) return ok(none());
+	return UnitOfWork.ofMinutes(value).map(some);
+}
+
 export interface HabitFieldsInput {
-	unitMinutes: number;
+	unitMinutes?: number | null;
 	goalKind: GoalKind;
 	targetUnits: number;
 	startDate: string;
@@ -36,7 +45,7 @@ export interface HabitFieldsInput {
 }
 
 export interface ParsedHabitFields {
-	unitOfWork: UnitOfWork;
+	unitOfWork: Option<UnitOfWork>;
 	goal: Goal;
 	startDate: Day;
 	endDate: Day | null;
@@ -50,7 +59,7 @@ export function parseHabitFields(input: HabitFieldsInput): Result<ParsedHabitFie
 	const endDateResult = parseOptionalDay(input.endDate);
 	if (!endDateResult.ok) return err(endDateResult.error);
 
-	const unitResult = UnitOfWork.ofMinutes(input.unitMinutes);
+	const unitResult = parseOptionalUnitOfWork(input.unitMinutes);
 	if (!unitResult.ok) return err(unitResult.error);
 
 	const goalResult = parseGoal(input.goalKind, input.targetUnits);

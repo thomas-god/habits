@@ -7,6 +7,7 @@ import {
 	OverallGoal,
 	UnitOfWork
 } from '../../domain/index.ts';
+import { none, some } from '../../shared/option.ts';
 import { err, ok, type Result } from '../../shared/result.ts';
 import { CorruptRecord } from '../../application/ports/errors.ts';
 
@@ -18,7 +19,7 @@ export interface HabitRow {
 	id: string;
 	name: string;
 	type: string;
-	unit_minutes: number;
+	unit_minutes: number | null;
 	goal_units: number;
 	start_date: string;
 	end_date: string | null;
@@ -37,7 +38,7 @@ export function habitToRow(habit: Habit): HabitRow {
 		id: habit.id.value,
 		name: habit.name,
 		type: habit.goal.kind,
-		unit_minutes: habit.unitOfWork.minutes,
+		unit_minutes: habit.unitOfWork.match({ some: (u) => u.minutes, none: () => null }),
 		goal_units: habit.goal.targetUnits,
 		start_date: habit.startDate.toISO(),
 		end_date: habit.endDate?.toISO() ?? null,
@@ -65,7 +66,10 @@ export function rowToHabit(row: HabitRow): Result<Habit, CorruptRecord> {
 	const endResult = row.end_date !== null ? Day.fromISO(row.end_date) : ok<Day | null, never>(null);
 	if (!endResult.ok) return corrupt(row.id, 'end_date', endResult.error);
 
-	const unitResult = UnitOfWork.ofMinutes(row.unit_minutes);
+	const unitResult =
+		row.unit_minutes === null
+			? ok(none<UnitOfWork>())
+			: UnitOfWork.ofMinutes(row.unit_minutes).map(some);
 	if (!unitResult.ok) return corrupt(row.id, 'unit_minutes', unitResult.error);
 
 	const goalResult =

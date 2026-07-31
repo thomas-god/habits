@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import type { ActionData } from './$types.js';
-	import { formatUnit } from '$lib/ui/format.js';
+	import { formatTotalUnits } from '$lib/ui/format.js';
 
 	let { form }: { form: ActionData } = $props();
 
 	// Live preview of unit label
-	let unitMinutes = $state(60);
+	let unitMinutes: number | undefined = $state(undefined);
 	let today = new Date().toISOString().slice(0, 10);
 </script>
 
@@ -34,24 +34,6 @@
 				/>
 			</label>
 
-			<!-- Unit of work -->
-			<label class="form-control w-full">
-				<div class="label">
-					<span class="label-text font-medium">Unit of work (minutes)</span>
-					<span class="label-text-alt text-base-content/50">1 unit = {formatUnit(unitMinutes)}</span
-					>
-				</div>
-				<input
-					type="number"
-					name="unitMinutes"
-					min="1"
-					step="1"
-					bind:value={unitMinutes}
-					class="input-bordered input w-full"
-					required
-				/>
-			</label>
-
 			<!-- Goal type -->
 			<div class="form-control w-full">
 				<div class="label"><span class="label-text font-medium">Goal type</span></div>
@@ -66,6 +48,28 @@
 					</label>
 				</div>
 			</div>
+
+			<!-- Unit of work -->
+			<label class="form-control w-full">
+				<div class="label">
+					<span class="label-text font-medium">Unit of work (minutes)</span>
+					<span class="label-text-alt text-base-content/50">
+						{#if unitMinutes}
+							1 unit = {formatTotalUnits(1, unitMinutes)}
+						{:else}
+							optional
+						{/if}
+					</span>
+				</div>
+				<input
+					type="number"
+					name="unitMinutes"
+					min="1"
+					step="1"
+					bind:value={unitMinutes}
+					class="input-bordered input w-full"
+				/>
+			</label>
 
 			<!-- Target units -->
 			<label class="form-control w-full">

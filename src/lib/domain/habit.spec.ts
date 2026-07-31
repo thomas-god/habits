@@ -5,6 +5,7 @@ import { Habit } from './habit.ts';
 import { HabitId } from './ids.ts';
 import { UnitOfWork } from './unit-of-work.ts';
 import { InvalidHabit } from './errors.ts';
+import { none, some } from '../shared/option.ts';
 import { expectOk, expectErr } from '../shared/testing.ts';
 
 const unit = expectOk(UnitOfWork.ofMinutes(60));
@@ -16,7 +17,7 @@ function makeHabit(overrides: Partial<Parameters<typeof Habit.from>[0]> = {}) {
 	return Habit.from({
 		id,
 		name: 'Piano',
-		unitOfWork: unit,
+		unitOfWork: some(unit),
 		goal: dailyGoal,
 		startDate: start,
 		createdAt: new Date(),
@@ -55,6 +56,11 @@ describe('Habit.from', () => {
 	it('derives kind from an overall goal', () => {
 		const habit = expectOk(makeHabit({ goal: expectOk(OverallGoal.of(100)) }));
 		expect(habit.kind).toBe('overall');
+	});
+
+	it('allows a habit with no unit of work', () => {
+		const habit = expectOk(makeHabit({ unitOfWork: none() }));
+		expect(habit.unitOfWork.isNone()).toBe(true);
 	});
 });
 
@@ -115,6 +121,11 @@ describe('Habit.update', () => {
 	it('can clear the end date explicitly', () => {
 		const withEnd = expectOk(persisted.update({ endDate: expectOk(Day.fromISO('2024-06-30')) }));
 		expect(expectOk(withEnd.update({ endDate: null })).endDate).toBeNull();
+	});
+
+	it('can clear the unit of work explicitly', () => {
+		const updated = expectOk(persisted.update({ unitOfWork: none() }));
+		expect(updated.unitOfWork.isNone()).toBe(true);
 	});
 
 	it('returns Err when an update violates an invariant', () => {

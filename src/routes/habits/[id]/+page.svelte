@@ -2,13 +2,14 @@
 	import { enhance } from '$app/forms';
 	import type { ActionData, PageData } from './$types.js';
 	import type { DailyProgress, OverallProgress } from '$lib/domain/index.js';
-	import { formatDate, formatDuration, formatPercent, formatUnit } from '$lib/ui/format.js';
+	import { formatDate, formatTotalUnits, formatPercent, formatUnitLabel } from '$lib/ui/format.js';
 	import HistoryGrid from '$lib/ui/components/molecules/HistoryGrid.svelte';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
 	let editing = $state(false);
 	let today = new Date().toISOString().slice(0, 10);
+	let unitLabel = $derived(formatUnitLabel(data.habit.unitMinutes));
 </script>
 
 <div class="mb-6 flex items-start justify-between gap-4">
@@ -16,7 +17,9 @@
 		<a href="/" class="text-sm text-base-content/50 hover:underline">← Back</a>
 		<h1 class="mt-2 text-2xl font-bold">{data.habit.name}</h1>
 		<p class="text-sm text-base-content/50">
-			{formatUnit(data.habit.unitMinutes)} / unit ·
+			{#if unitLabel.isSome()}
+				{unitLabel.value} / unit ·
+			{/if}
 			{formatDate(data.habit.startDate)}
 			{#if data.habit.endDate}
 				→ {formatDate(data.habit.endDate)}{/if}
@@ -38,9 +41,9 @@
 			{@const p = data.progress as DailyProgress}
 			<div class="flex items-end justify-between">
 				<div>
-					<p class="text-3xl font-bold">{formatDuration(p.doneUnits, data.habit.unitMinutes)}</p>
+					<p class="text-3xl font-bold">{formatTotalUnits(p.doneUnits, data.habit.unitMinutes)}</p>
 					<p class="text-sm text-base-content/50">
-						today · goal {formatDuration(p.targetUnits, data.habit.unitMinutes)}
+						today · goal {formatTotalUnits(p.targetUnits, data.habit.unitMinutes)}
 					</p>
 				</div>
 				<span class="text-2xl font-semibold {p.met ? 'text-success' : 'text-base-content/40'}">
@@ -51,9 +54,9 @@
 			{@const p = data.progress as OverallProgress}
 			<div class="flex items-end justify-between">
 				<div>
-					<p class="text-3xl font-bold">{formatDuration(p.doneUnits, data.habit.unitMinutes)}</p>
+					<p class="text-3xl font-bold">{formatTotalUnits(p.doneUnits, data.habit.unitMinutes)}</p>
 					<p class="text-sm text-base-content/50">
-						of {formatDuration(p.targetUnits, data.habit.unitMinutes)} total
+						of {formatTotalUnits(p.targetUnits, data.habit.unitMinutes)} total
 					</p>
 				</div>
 				<span class="text-2xl font-semibold {p.met ? 'text-success' : 'text-base-content/40'}">
@@ -62,7 +65,7 @@
 			</div>
 			{#if !p.met && p.daysRemaining !== null}
 				<p class="text-xs text-base-content/40">
-					{p.daysRemaining} day{p.daysRemaining === 1 ? '' : 's'} remaining · needs {formatDuration(
+					{p.daysRemaining} day{p.daysRemaining === 1 ? '' : 's'} remaining · needs {formatTotalUnits(
 						Math.ceil(p.requiredUnitsPerDay ?? 0),
 						data.habit.unitMinutes
 					)}/day to reach goal
@@ -146,7 +149,7 @@
 				<div class="grid grid-cols-2 gap-4 text-sm">
 					<div>
 						<div class="text-base-content/50">Unit</div>
-						<div>{formatUnit(data.habit.unitMinutes)}</div>
+						<div>{unitLabel.unwrapOr('None')}</div>
 					</div>
 					<div>
 						<div class="text-base-content/50">Goal type</div>
@@ -202,13 +205,13 @@
 				<dd class="capitalize">{data.habit.kind}</dd>
 				<dt class="text-base-content/50">Target</dt>
 				<dd>
-					{data.habit.targetUnits} units ({formatDuration(
+					{data.habit.targetUnits} units ({formatTotalUnits(
 						data.habit.targetUnits,
 						data.habit.unitMinutes
 					)})
 				</dd>
 				<dt class="text-base-content/50">Unit</dt>
-				<dd>{formatUnit(data.habit.unitMinutes)}</dd>
+				<dd>{unitLabel.unwrapOr('None')}</dd>
 				<dt class="text-base-content/50">Start</dt>
 				<dd>{formatDate(data.habit.startDate)}</dd>
 				{#if data.habit.endDate}

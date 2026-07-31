@@ -1,7 +1,12 @@
 import { describe, it, expect } from 'vitest';
 import { DailyGoal, InvalidValue, OverallGoal } from '../domain/index.ts';
 import { expectErr, expectOk } from '../shared/testing.ts';
-import { parseGoal, parseHabitFields, parseOptionalDay } from './parsing.ts';
+import {
+	parseGoal,
+	parseHabitFields,
+	parseOptionalDay,
+	parseOptionalUnitOfWork
+} from './parsing.ts';
 
 describe('parseGoal', () => {
 	it('returns a DailyGoal for kind "daily"', () => {
@@ -44,6 +49,26 @@ describe('parseOptionalDay', () => {
 	});
 });
 
+describe('parseOptionalUnitOfWork', () => {
+	it('returns none() for null input', () => {
+		expect(expectOk(parseOptionalUnitOfWork(null)).isNone()).toBe(true);
+	});
+
+	it('returns none() for undefined input', () => {
+		expect(expectOk(parseOptionalUnitOfWork(undefined)).isNone()).toBe(true);
+	});
+
+	it('parses a valid minute count', () => {
+		const result = expectOk(parseOptionalUnitOfWork(45));
+		expect(result.isSome()).toBe(true);
+		expect(result.unwrap().minutes).toBe(45);
+	});
+
+	it('returns Err for a non-positive minute count', () => {
+		expect(expectErr(parseOptionalUnitOfWork(0))).toBeInstanceOf(InvalidValue);
+	});
+});
+
 describe('parseHabitFields', () => {
 	const validInput = {
 		unitMinutes: 45,
@@ -54,10 +79,16 @@ describe('parseHabitFields', () => {
 
 	it('parses a fully valid input with no end date', () => {
 		const fields = expectOk(parseHabitFields(validInput));
-		expect(fields.unitOfWork.minutes).toBe(45);
+		expect(fields.unitOfWork.unwrap().minutes).toBe(45);
 		expect(fields.goal).toBeInstanceOf(DailyGoal);
 		expect(fields.startDate.toISO()).toBe('2024-06-01');
 		expect(fields.endDate).toBeNull();
+	});
+
+	it('treats an omitted unitMinutes as no unit of work', () => {
+		const { unitMinutes: _unitMinutes, ...rest } = validInput;
+		const fields = expectOk(parseHabitFields(rest));
+		expect(fields.unitOfWork.isNone()).toBe(true);
 	});
 
 	it('parses a valid end date', () => {
