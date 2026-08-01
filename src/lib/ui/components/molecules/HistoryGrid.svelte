@@ -2,6 +2,7 @@
 	import type { HabitDetailDTO } from '$lib/application';
 	import { asOption } from '$lib/shared/option';
 	import { parseDay, getToday } from '$lib/ui/date';
+	import { formatTotalUnits } from '$lib/ui/format';
 	import dayjs from 'dayjs';
 
 	let { habitDetails }: { habitDetails: HabitDetailDTO } = $props();
@@ -71,7 +72,7 @@
 	<div class="tooltip" style:grid-row={row} style:grid-column={column}>
 		<div class="tooltip-content flex flex-col items-start">
 			<div>{day.format('YYYY-MM-DD')}</div>
-			<div>{units} unit{units > 0 ? 's' : ''}</div>
+			<div>{formatTotalUnits(units, habit.unitMinutes)}</div>
 		</div>
 		{#if units === 0}
 			<div class="h-4 w-4 rounded-sm border border-gray-700"></div>
@@ -99,7 +100,7 @@
 	<div class="tooltip" style:grid-row={row} style:grid-column={column}>
 		<div class="tooltip-content flex flex-col items-start">
 			<div>{day.format('YYYY-MM-DD')}</div>
-			<div>{units} unit{units > 0 ? 's' : ''}</div>
+			<div>{formatTotalUnits(units, habit.unitMinutes)}</div>
 		</div>
 		{#if state === 'not-done'}
 			<div class="h-4 w-4 rounded-sm border border-gray-700"></div>
