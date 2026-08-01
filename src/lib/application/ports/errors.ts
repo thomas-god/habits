@@ -30,3 +30,18 @@ export class CorruptRecord extends ApplicationError {
 		super(message, { cause });
 	}
 }
+
+/**
+ * The day falls outside the habit's active range (`startDate`..`endDate`,
+ * inclusive on both sides). Only known once the habit has been loaded, so
+ * this is an application-layer error rather than one `Entry.create` can
+ * enforce on its own.
+ */
+export class EntryDayOutOfRange extends ApplicationError {
+	constructor(
+		readonly habitId: string,
+		readonly day: string
+	) {
+		super(`Day ${day} is outside habit ${habitId}'s active range`);
+	}
+}

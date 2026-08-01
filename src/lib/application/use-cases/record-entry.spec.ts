@@ -3,7 +3,7 @@ import { Day, HabitId, InvalidValue } from '../../domain/index.ts';
 import { expectErr, expectOk } from '../../shared/testing.ts';
 import { createHabit } from './create-habit.ts';
 import { FixedClock, InMemoryEntryRepository, InMemoryHabitRepository } from '../testing.ts';
-import { HabitNotFound } from '../ports/errors.ts';
+import { EntryDayOutOfRange, HabitNotFound } from '../ports/errors.ts';
 import { recordEntry, type RecordEntryDeps } from './record-entry.ts';
 
 async function setup() {
@@ -24,7 +24,7 @@ async function setup() {
 			}
 		)
 	);
-	return { deps, entries, habitId: habit.id };
+	return { deps, habits, entries, clock, habitId: habit.id };
 }
 
 describe('recordEntry', () => {
@@ -93,6 +93,80 @@ describe('recordEntry', () => {
 		const { deps, habitId } = await setup();
 		const error = expectErr(await recordEntry(deps, { habitId, units: -1 }));
 		expect(error).toBeInstanceOf(InvalidValue);
+	});
+
+	it('rejects a day before the habit start date', async () => {
+		const { deps, habitId } = await setup();
+		const error = expectErr(await recordEntry(deps, { habitId, day: '2024-05-31', units: 1 }));
+		expect(error).toBeInstanceOf(EntryDayOutOfRange);
+	});
+
+	it('rejects a day after the habit end date', async () => {
+		const { deps, habits, clock } = await setup();
+		const habit = expectOk(
+			await createHabit(
+				{ habits, clock },
+				{
+					name: 'Guitar',
+					unitMinutes: 45,
+					goalKind: 'daily',
+					targetUnits: 4,
+					startDate: '2024-06-01',
+					endDate: '2024-06-05'
+				}
+			)
+		);
+		const error = expectErr(
+			await recordEntry(deps, { habitId: habit.id, day: '2024-06-06', units: 1 })
+		);
+		expect(error).toBeInstanceOf(EntryDayOutOfRange);
+	});
+
+	it('accepts the start and end dates themselves (inclusive)', async () => {
+		const { deps, habits, clock } = await setup();
+		const habit = expectOk(
+			await createHabit(
+				{ habits, clock },
+				{
+					name: 'Guitar',
+					unitMinutes: 45,
+					goalKind: 'daily',
+					targetUnits: 4,
+					startDate: '2024-06-01',
+					endDate: '2024-06-05'
+				}
+			)
+		);
+		expect(
+			expectOk(await recordEntry(deps, { habitId: habit.id, day: '2024-06-01', units: 1 })).day
+		).toBe('2024-06-01');
+		expect(
+			expectOk(await recordEntry(deps, { habitId: habit.id, day: '2024-06-05', units: 1 })).day
+		).toBe('2024-06-05');
+	});
+
+	it('allows logging a day within range even after the habit has ended', async () => {
+		const { habits } = await setup();
+		const endedClock = new FixedClock(expectOk(Day.fromISO('2024-06-20'))); // after end date
+		const entries = new InMemoryEntryRepository();
+		const deps: RecordEntryDeps = { habits, entries, clock: endedClock };
+		const habit = expectOk(
+			await createHabit(
+				{ habits, clock: endedClock },
+				{
+					name: 'Guitar',
+					unitMinutes: 45,
+					goalKind: 'daily',
+					targetUnits: 4,
+					startDate: '2024-06-01',
+					endDate: '2024-06-05'
+				}
+			)
+		);
+		const dto = expectOk(
+			await recordEntry(deps, { habitId: habit.id, day: '2024-06-05', units: 2 })
+		);
+		expect(dto.units).toBe(2);
 	});
 
 	it('persists the entry via the repository', async () => {

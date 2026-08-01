@@ -2,7 +2,7 @@ import { Day, Entry, EntryKey, HabitId, type DomainError } from '../../domain/in
 import { err, ok, type Result } from '../../shared/result.ts';
 import type { Clock } from '../ports/clock.ts';
 import type { EntryRepository } from '../ports/entry-repository.ts';
-import { HabitNotFound, type CorruptRecord } from '../ports/errors.ts';
+import { EntryDayOutOfRange, HabitNotFound, type CorruptRecord } from '../ports/errors.ts';
 import type { HabitRepository } from '../ports/habit-repository.ts';
 import type { EntryDTO } from '../dto.ts';
 import { toEntryDTO } from '../mappers.ts';
@@ -16,7 +16,7 @@ export type RecordEntryInput = { habitId: string; day?: string } & (
 	{ units: number; delta?: undefined } | { delta: number; units?: undefined }
 );
 
-export type RecordEntryError = DomainError | HabitNotFound | CorruptRecord;
+export type RecordEntryError = DomainError | HabitNotFound | EntryDayOutOfRange | CorruptRecord;
 
 export interface RecordEntryDeps {
 	habits: HabitRepository;
@@ -39,6 +39,9 @@ export async function recordEntry(
 	const habitResult = await deps.habits.findById(habitId);
 	if (!habitResult.ok) return err(habitResult.error);
 	if (!habitResult.value) return err(new HabitNotFound(input.habitId));
+	const habit = habitResult.value;
+
+	if (!habit.isActive(day)) return err(new EntryDayOutOfRange(input.habitId, day.toISO()));
 
 	let units: number;
 	if (input.units !== undefined) {
