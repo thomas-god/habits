@@ -29,7 +29,7 @@ describe('Habit.from', () => {
 	it('parses a valid habit, trimming the name and defaulting the end date', () => {
 		const habit = expectOk(makeHabit({ name: '  Piano  ' }));
 		expect(habit.name).toBe('Piano');
-		expect(habit.endDate).toBeNull();
+		expect(habit.endDate.isNone()).toBe(true);
 		expect(habit.id.equals(id)).toBe(true);
 		expect(habit.kind).toBe('daily');
 	});
@@ -45,12 +45,12 @@ describe('Habit.from', () => {
 
 	it('returns Err for an end date before the start date', () => {
 		const badEnd = expectOk(Day.fromISO('2024-05-31'));
-		expect(expectErr(makeHabit({ endDate: badEnd }))).toBeInstanceOf(InvalidHabit);
+		expect(expectErr(makeHabit({ endDate: some(badEnd) }))).toBeInstanceOf(InvalidHabit);
 	});
 
 	it('allows an end date equal to the start date', () => {
-		const habit = expectOk(makeHabit({ endDate: start }));
-		expect(habit.endDate?.toISO()).toBe('2024-06-01');
+		const habit = expectOk(makeHabit({ endDate: some(start) }));
+		expect(habit.endDate.unwrap().toISO()).toBe('2024-06-01');
 	});
 
 	it('derives kind from an overall goal', () => {
@@ -65,7 +65,7 @@ describe('Habit.from', () => {
 });
 
 describe('Habit.isActive / isEnded', () => {
-	const habit = expectOk(makeHabit({ endDate: expectOk(Day.fromISO('2024-06-30')) }));
+	const habit = expectOk(makeHabit({ endDate: some(expectOk(Day.fromISO('2024-06-30'))) }));
 
 	it('is inactive before the start date', () => {
 		expect(habit.isActive(expectOk(Day.fromISO('2024-05-31')))).toBe(false);
@@ -96,7 +96,7 @@ describe('Habit.archiveOn', () => {
 
 	it('sets the end date to the archive day and preserves the id', () => {
 		const archived = expectOk(persisted.archiveOn(expectOk(Day.fromISO('2024-06-15'))));
-		expect(archived.endDate?.toISO()).toBe('2024-06-15');
+		expect(archived.endDate.unwrap().toISO()).toBe('2024-06-15');
 		expect(archived.id.equals(id)).toBe(true);
 		expect(archived.isActive(expectOk(Day.fromISO('2024-06-16')))).toBe(false);
 	});
@@ -119,8 +119,10 @@ describe('Habit.update', () => {
 	});
 
 	it('can clear the end date explicitly', () => {
-		const withEnd = expectOk(persisted.update({ endDate: expectOk(Day.fromISO('2024-06-30')) }));
-		expect(expectOk(withEnd.update({ endDate: null })).endDate).toBeNull();
+		const withEnd = expectOk(
+			persisted.update({ endDate: some(expectOk(Day.fromISO('2024-06-30'))) })
+		);
+		expect(expectOk(withEnd.update({ endDate: none() })).endDate.isNone()).toBe(true);
 	});
 
 	it('can clear the unit of work explicitly', () => {

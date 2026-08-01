@@ -28,16 +28,16 @@ describe('parseGoal', () => {
 });
 
 describe('parseOptionalDay', () => {
-	it('returns null for null input', () => {
-		expect(expectOk(parseOptionalDay(null))).toBeNull();
+	it('returns none() for null input', () => {
+		expect(expectOk(parseOptionalDay(null)).isNone()).toBe(true);
 	});
 
-	it('returns null for undefined input', () => {
-		expect(expectOk(parseOptionalDay(undefined))).toBeNull();
+	it('returns none() for undefined input', () => {
+		expect(expectOk(parseOptionalDay(undefined)).isNone()).toBe(true);
 	});
 
 	it('parses a valid ISO date string', () => {
-		expect(expectOk(parseOptionalDay('2024-06-10'))?.toISO()).toBe('2024-06-10');
+		expect(expectOk(parseOptionalDay('2024-06-10')).unwrap().toISO()).toBe('2024-06-10');
 	});
 
 	it('returns Err for a malformed date string', () => {
@@ -82,7 +82,7 @@ describe('parseHabitFields', () => {
 		expect(fields.unitOfWork.unwrap().minutes).toBe(45);
 		expect(fields.goal).toBeInstanceOf(DailyGoal);
 		expect(fields.startDate.toISO()).toBe('2024-06-01');
-		expect(fields.endDate).toBeNull();
+		expect(fields.endDate.isNone()).toBe(true);
 	});
 
 	it('treats an omitted unitMinutes as no unit of work', () => {
@@ -93,11 +93,13 @@ describe('parseHabitFields', () => {
 
 	it('parses a valid end date', () => {
 		const fields = expectOk(parseHabitFields({ ...validInput, endDate: '2024-08-31' }));
-		expect(fields.endDate?.toISO()).toBe('2024-08-31');
+		expect(fields.endDate.unwrap().toISO()).toBe('2024-08-31');
 	});
 
 	it('treats an explicit null end date as absent', () => {
-		expect(expectOk(parseHabitFields({ ...validInput, endDate: null })).endDate).toBeNull();
+		expect(expectOk(parseHabitFields({ ...validInput, endDate: null })).endDate.isNone()).toBe(
+			true
+		);
 	});
 
 	it('returns Err for an invalid start date', () => {

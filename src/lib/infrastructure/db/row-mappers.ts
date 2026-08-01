@@ -7,7 +7,7 @@ import {
 	OverallGoal,
 	UnitOfWork
 } from '../../domain/index.ts';
-import { none, some } from '../../shared/option.ts';
+import { none, some, type Option } from '../../shared/option.ts';
 import { err, ok, type Result } from '../../shared/result.ts';
 import { CorruptRecord } from '../../application/ports/errors.ts';
 
@@ -41,7 +41,7 @@ export function habitToRow(habit: Habit): HabitRow {
 		unit_minutes: habit.unitOfWork.match({ some: (u) => u.minutes, none: () => null }),
 		goal_units: habit.goal.targetUnits,
 		start_date: habit.startDate.toISO(),
-		end_date: habit.endDate?.toISO() ?? null,
+		end_date: habit.endDate.match({ some: (d) => d.toISO(), none: () => null }),
 		created_at: habit.createdAt.toISOString()
 	};
 }
@@ -63,7 +63,8 @@ export function rowToHabit(row: HabitRow): Result<Habit, CorruptRecord> {
 	const startResult = Day.fromISO(row.start_date);
 	if (!startResult.ok) return corrupt(row.id, 'start_date', startResult.error);
 
-	const endResult = row.end_date !== null ? Day.fromISO(row.end_date) : ok<Day | null, never>(null);
+	const endResult =
+		row.end_date !== null ? Day.fromISO(row.end_date).map(some) : ok<Option<Day>, never>(none());
 	if (!endResult.ok) return corrupt(row.id, 'end_date', endResult.error);
 
 	const unitResult =

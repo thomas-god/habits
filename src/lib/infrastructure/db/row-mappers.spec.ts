@@ -71,7 +71,7 @@ describe('habitToRow', () => {
 	});
 
 	it('serialises an end date', () => {
-		const row = habitToRow(makeHabit({ endDate: expectOk(Day.fromISO('2024-08-31')) }));
+		const row = habitToRow(makeHabit({ endDate: some(expectOk(Day.fromISO('2024-08-31'))) }));
 		expect(row.end_date).toBe('2024-08-31');
 	});
 
@@ -96,7 +96,7 @@ describe('rowToHabit', () => {
 		expect(habit.kind).toBe('daily');
 		expect(habit.goal.targetUnits).toBe(3);
 		expect(habit.startDate.toISO()).toBe('2024-06-01');
-		expect(habit.endDate).toBeNull();
+		expect(habit.endDate.isNone()).toBe(true);
 		expect(habit.createdAt.toISOString()).toBe('2024-06-01T08:00:00.000Z');
 	});
 
@@ -105,7 +105,7 @@ describe('rowToHabit', () => {
 			rowToHabit(validHabitRow({ type: 'overall', goal_units: 100, end_date: '2024-08-31' }))
 		);
 		expect(habit.kind).toBe('overall');
-		expect(habit.endDate?.toISO()).toBe('2024-08-31');
+		expect(habit.endDate.unwrap().toISO()).toBe('2024-08-31');
 	});
 
 	it('returns CorruptRecord for an invalid habit id', () => {

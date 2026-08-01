@@ -6,7 +6,7 @@ import { UnitOfWork } from './unit-of-work.ts';
 import { Entry } from './entry.ts';
 import { HabitId } from './ids.ts';
 import { dailyProgress, overallProgress, progressFor, totalUnits } from './progress.ts';
-import { some } from '../shared/option.ts';
+import { none, some } from '../shared/option.ts';
 import { expectOk } from '../shared/testing.ts';
 
 const unit = expectOk(UnitOfWork.ofMinutes(60));
@@ -25,7 +25,7 @@ function daily(target: number) {
 	);
 }
 
-function overall(target: number, endDate: Day | null = null) {
+function overall(target: number, endDate = none<Day>()) {
 	return expectOk(
 		Habit.from({
 			id: HabitId.generate(),
@@ -84,14 +84,14 @@ describe('overallProgress', () => {
 
 	it('paces required units per day against the end date (inclusive of today)', () => {
 		const end = expectOk(Day.fromISO('2024-06-19')); // 10 days remaining incl. today
-		const p = overallProgress(overall(100, end), 40, today);
+		const p = overallProgress(overall(100, some(end)), 40, today);
 		expect(p.daysRemaining).toBe(10);
 		expect(p.requiredUnitsPerDay).toBeCloseTo(6); // 60 remaining / 10 days
 	});
 
 	it('marks met and stops requiring further work', () => {
 		const end = expectOk(Day.fromISO('2024-06-19'));
-		const p = overallProgress(overall(100, end), 100, today);
+		const p = overallProgress(overall(100, some(end)), 100, today);
 		expect(p.met).toBe(true);
 		expect(p.remainingUnits).toBe(0);
 		expect(p.requiredUnitsPerDay).toBeNull();
@@ -99,7 +99,7 @@ describe('overallProgress', () => {
 
 	it('handles a passed deadline without dividing by zero', () => {
 		const end = expectOk(Day.fromISO('2024-06-05')); // already passed
-		const p = overallProgress(overall(100, end), 40, today);
+		const p = overallProgress(overall(100, some(end)), 40, today);
 		expect(p.daysRemaining).toBe(0);
 		expect(p.requiredUnitsPerDay).toBeNull();
 	});

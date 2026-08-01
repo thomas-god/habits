@@ -42,7 +42,7 @@ describe('archiveHabit', () => {
 		const { deps, habitId } = await setup();
 		await archiveHabit(deps, { habitId });
 		const stored = expectOk(await deps.habits.findById(expectOk(HabitId.fromString(habitId))));
-		expect(stored?.endDate?.toISO()).toBe('2024-06-10');
+		expect(stored?.endDate.unwrap().toISO()).toBe('2024-06-10');
 	});
 
 	it('rejects archiving before the start date', async () => {

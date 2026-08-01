@@ -39,20 +39,20 @@ describe('toHabitDTO', () => {
 	});
 
 	it('serialises a present end date as an ISO string', () => {
-		const habit = makeHabit({ endDate: expectOk(Day.fromISO('2024-08-31')) });
+		const habit = makeHabit({ endDate: some(expectOk(Day.fromISO('2024-08-31'))) });
 		const dto = toHabitDTO(habit, expectOk(Day.fromISO('2024-06-10')));
 		expect(dto.endDate).toBe('2024-08-31');
 	});
 
 	it('resolves active = true when today is within [startDate, endDate]', () => {
-		const habit = makeHabit({ endDate: expectOk(Day.fromISO('2024-06-30')) });
+		const habit = makeHabit({ endDate: some(expectOk(Day.fromISO('2024-06-30'))) });
 		expect(toHabitDTO(habit, expectOk(Day.fromISO('2024-06-15'))).active).toBe(true);
 		expect(toHabitDTO(habit, start).active).toBe(true); // start date inclusive
 		expect(toHabitDTO(habit, expectOk(Day.fromISO('2024-06-30'))).active).toBe(true); // end date inclusive
 	});
 
 	it('resolves active = false outside the schedule', () => {
-		const habit = makeHabit({ endDate: expectOk(Day.fromISO('2024-06-30')) });
+		const habit = makeHabit({ endDate: some(expectOk(Day.fromISO('2024-06-30'))) });
 		expect(toHabitDTO(habit, expectOk(Day.fromISO('2024-05-31'))).active).toBe(false); // before start
 		expect(toHabitDTO(habit, expectOk(Day.fromISO('2024-07-01'))).active).toBe(false); // after end
 	});

@@ -80,10 +80,10 @@ describe('SqliteHabitRepository', () => {
 	});
 
 	it('persists and restores an end date', async () => {
-		const habit = makeHabit(db, { endDate: expectOk(Day.fromISO('2024-08-31')) });
+		const habit = makeHabit(db, { endDate: some(expectOk(Day.fromISO('2024-08-31'))) });
 		await repo.save(habit);
 		const found = expectOk(await repo.findById(habit.id));
-		expect(found?.endDate?.toISO()).toBe('2024-08-31');
+		expect(found?.endDate.unwrap().toISO()).toBe('2024-08-31');
 	});
 
 	it('persists and restores an overall goal', async () => {

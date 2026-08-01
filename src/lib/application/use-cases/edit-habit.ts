@@ -1,11 +1,12 @@
 import { Day, HabitId, type DomainError } from '../../domain/index.ts';
+import type { Option } from '../../shared/option.ts';
 import { err, ok, type Result } from '../../shared/result.ts';
 import type { Clock } from '../ports/clock.ts';
 import { HabitNotFound, type CorruptRecord } from '../ports/errors.ts';
 import type { HabitRepository } from '../ports/habit-repository.ts';
 import type { HabitDTO } from '../dto.ts';
 import { toHabitDTO } from '../mappers.ts';
-import { parseGoal } from '../parsing.ts';
+import { parseGoal, parseOptionalDay } from '../parsing.ts';
 
 /**
  * Every field is optional; only supplied fields are changed. `endDate: null`
@@ -54,15 +55,11 @@ export async function editHabit(
 	}
 
 	// `undefined` here means "leave unchanged" (as opposed to explicit `null` = clear).
-	let endDate: Day | null | undefined = undefined;
+	let endDate: Option<Day> | undefined = undefined;
 	if (input.endDate !== undefined) {
-		if (input.endDate === null) {
-			endDate = null;
-		} else {
-			const endDateResult = Day.fromISO(input.endDate);
-			if (!endDateResult.ok) return err(endDateResult.error);
-			endDate = endDateResult.value;
-		}
+		const endDateResult = parseOptionalDay(input.endDate);
+		if (!endDateResult.ok) return err(endDateResult.error);
+		endDate = endDateResult.value;
 	}
 
 	const updatedResult = habit.update({ name: input.name, goal, startDate, endDate });

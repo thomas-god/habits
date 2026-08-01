@@ -63,9 +63,9 @@ export function overallProgress(habit: Habit, unitsDone: number, today: Day): Ov
 
 	let daysRemaining: number | null = null;
 	let requiredUnitsPerDay: number | null = null;
-	if (habit.endDate) {
+	if (habit.endDate.isSome()) {
 		// Inclusive of today: an end date of today still leaves one day.
-		daysRemaining = Math.max(0, today.daysUntil(habit.endDate) + 1);
+		daysRemaining = Math.max(0, today.daysUntil(habit.endDate.value) + 1);
 		if (!met && daysRemaining > 0) {
 			requiredUnitsPerDay = remainingUnits / daysRemaining;
 		}

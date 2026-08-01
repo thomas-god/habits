@@ -10,7 +10,7 @@ export function toHabitDTO(habit: Habit, today: Day): HabitDTO {
 		kind: habit.kind,
 		targetUnits: habit.goal.targetUnits,
 		startDate: habit.startDate.toISO(),
-		endDate: habit.endDate?.toISO() ?? null,
+		endDate: habit.endDate.match({ some: (d) => d.toISO(), none: () => null }),
 		createdAt: habit.createdAt.toISOString(),
 		active: habit.isActive(today)
 	};

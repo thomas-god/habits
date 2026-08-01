@@ -1,4 +1,4 @@
-import type { Option } from '../shared/option.ts';
+import { none, some, type Option } from '../shared/option.ts';
 import { err, ok, type Result } from '../shared/result.ts';
 import { Day } from './day.ts';
 import { InvalidHabit } from './errors.ts';
@@ -25,7 +25,7 @@ export class Habit {
 	readonly unitOfWork: Option<UnitOfWork>;
 	readonly goal: Goal;
 	readonly startDate: Day;
-	readonly endDate: Day | null;
+	readonly endDate: Option<Day>;
 	readonly createdAt: Date;
 
 	private constructor(params: {
@@ -34,7 +34,7 @@ export class Habit {
 		unitOfWork: Option<UnitOfWork>;
 		goal: Goal;
 		startDate: Day;
-		endDate: Day | null;
+		endDate: Option<Day>;
 		createdAt: Date;
 	}) {
 		this.id = params.id;
@@ -67,15 +67,15 @@ export class Habit {
 		unitOfWork: Option<UnitOfWork>;
 		goal: Goal;
 		startDate: Day;
-		endDate?: Day | null;
+		endDate?: Option<Day>;
 		createdAt: Date;
 	}): Result<Habit, InvalidHabit> {
 		const name = params.name.trim();
 		if (name.length === 0) {
 			return err(new InvalidHabit('Habit name must not be empty'));
 		}
-		const endDate = params.endDate ?? null;
-		if (endDate && endDate.isBefore(params.startDate)) {
+		const endDate = params.endDate ?? none();
+		if (endDate.isSomeAnd((end) => end.isBefore(params.startDate))) {
 			return err(new InvalidHabit('Habit end date must not be before its start date'));
 		}
 		return ok(new Habit({ ...params, name, endDate }));
@@ -87,13 +87,13 @@ export class Habit {
 	 */
 	isActive(day: Day): boolean {
 		if (day.isBefore(this.startDate)) return false;
-		if (this.endDate && day.isAfter(this.endDate)) return false;
+		if (this.endDate.isSomeAnd((end) => day.isAfter(end))) return false;
 		return true;
 	}
 
 	/** Whether the habit has ended (archived or past its deadline) as of `day`. */
 	isEnded(day: Day): boolean {
-		return this.endDate !== null && this.endDate.isBefore(day);
+		return this.endDate.isSomeAnd((end) => end.isBefore(day));
 	}
 
 	/** A copy archived on `day` — i.e. with its end date set to that day. */
@@ -101,7 +101,7 @@ export class Habit {
 		if (day.isBefore(this.startDate)) {
 			return err(new InvalidHabit('Cannot archive a habit before its start date'));
 		}
-		return ok(new Habit({ ...this, endDate: day }));
+		return ok(new Habit({ ...this, endDate: some(day) }));
 	}
 
 	/** A copy with fields changed; re-checks invariants. */
@@ -110,7 +110,7 @@ export class Habit {
 		unitOfWork?: Option<UnitOfWork>;
 		goal?: Goal;
 		startDate?: Day;
-		endDate?: Day | null;
+		endDate?: Option<Day>;
 	}): Result<Habit, InvalidHabit> {
 		return Habit.from({
 			id: this.id,

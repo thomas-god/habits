@@ -23,9 +23,9 @@ export function parseGoal(kind: GoalKind, targetUnits: number): Result<Goal, Dom
 /** `undefined`/`null` parse to "no end date"; otherwise a strict ISO date. */
 export function parseOptionalDay(
 	value: string | null | undefined
-): Result<Day | null, DomainError> {
-	if (value === null || value === undefined) return ok(null);
-	return Day.fromISO(value);
+): Result<Option<Day>, DomainError> {
+	if (value === null || value === undefined) return ok(none());
+	return Day.fromISO(value).map(some);
 }
 
 /** `undefined`/`null` parse to "no unit of work"; otherwise a valid minute count. */
@@ -48,7 +48,7 @@ export interface ParsedHabitFields {
 	unitOfWork: Option<UnitOfWork>;
 	goal: Goal;
 	startDate: Day;
-	endDate: Day | null;
+	endDate: Option<Day>;
 }
 
 /** Parse the raw scheduling/goal fields shared by the create/edit habit inputs. */
