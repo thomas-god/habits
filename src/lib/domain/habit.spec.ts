@@ -62,6 +62,21 @@ describe('Habit.from', () => {
 		const habit = expectOk(makeHabit({ unitOfWork: none() }));
 		expect(habit.unitOfWork.isNone()).toBe(true);
 	});
+
+	it('defaults the description to none', () => {
+		const habit = expectOk(makeHabit());
+		expect(habit.description.isNone()).toBe(true);
+	});
+
+	it('trims the description', () => {
+		const habit = expectOk(makeHabit({ description: some('  Practice scales  ') }));
+		expect(habit.description.unwrap()).toBe('Practice scales');
+	});
+
+	it('treats a blank description as none', () => {
+		const habit = expectOk(makeHabit({ description: some('   ') }));
+		expect(habit.description.isNone()).toBe(true);
+	});
 });
 
 describe('Habit.isActive / isEnded', () => {
@@ -128,6 +143,14 @@ describe('Habit.update', () => {
 	it('can clear the unit of work explicitly', () => {
 		const updated = expectOk(persisted.update({ unitOfWork: none() }));
 		expect(updated.unitOfWork.isNone()).toBe(true);
+	});
+
+	it('can set and clear the description', () => {
+		const withDescription = expectOk(persisted.update({ description: some('New description') }));
+		expect(withDescription.description.unwrap()).toBe('New description');
+		expect(expectOk(withDescription.update({ description: none() })).description.isNone()).toBe(
+			true
+		);
 	});
 
 	it('returns Err when an update violates an invariant', () => {

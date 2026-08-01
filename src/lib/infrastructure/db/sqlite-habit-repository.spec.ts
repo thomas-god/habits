@@ -86,6 +86,13 @@ describe('SqliteHabitRepository', () => {
 		expect(found?.endDate.unwrap().toISO()).toBe('2024-08-31');
 	});
 
+	it('persists and restores a description', async () => {
+		const habit = makeHabit(db, { description: some('Practice scales') });
+		await repo.save(habit);
+		const found = expectOk(await repo.findById(habit.id));
+		expect(found?.description.unwrap()).toBe('Practice scales');
+	});
+
 	it('persists and restores an overall goal', async () => {
 		const habit = makeHabit(db, { goal: expectOk(OverallGoal.of(100)) });
 		await repo.save(habit);
@@ -96,7 +103,7 @@ describe('SqliteHabitRepository', () => {
 
 	it('returns CorruptRecord when a stored row violates invariants', async () => {
 		// Bypass the domain by writing a corrupt row directly.
-		db.prepare('INSERT INTO habit VALUES (?,?,?,?,?,?,?,?)').run(
+		db.prepare('INSERT INTO habit VALUES (?,?,?,?,?,?,?,?,?)').run(
 			'bad-uuid',
 			'',
 			'daily',
@@ -104,7 +111,8 @@ describe('SqliteHabitRepository', () => {
 			3,
 			'2024-06-01',
 			null,
-			'2024-06-01T00:00:00.000Z'
+			'2024-06-01T00:00:00.000Z',
+			null
 		);
 		const listResult = await repo.listAll();
 		expect(listResult.ok).toBe(false);

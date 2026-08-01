@@ -31,6 +31,7 @@ describe('createHabit', () => {
 		expect(dto.startDate).toBe('2024-06-01');
 		expect(dto.endDate).toBeNull();
 		expect(dto.active).toBe(true);
+		expect(dto.description).toBeNull();
 
 		const stored = (await habits.listAll()).unwrap();
 		expect(stored).toHaveLength(1);
@@ -59,6 +60,14 @@ describe('createHabit', () => {
 		);
 		expect(dto.kind).toBe('overall');
 		expect(dto.endDate).toBe('2024-08-31');
+	});
+
+	it('accepts an optional description', async () => {
+		const { deps } = setup();
+		const dto = expectOk(
+			await createHabit(deps, { ...validInput, description: '  Practice scales  ' })
+		);
+		expect(dto.description).toBe('Practice scales');
 	});
 
 	it('rejects a malformed start date', async () => {

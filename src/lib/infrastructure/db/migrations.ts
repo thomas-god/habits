@@ -41,6 +41,12 @@ const MIGRATIONS: { version: number; sql: string }[] = [
 		sql: `
       ALTER TABLE habit ALTER COLUMN unit_minutes DROP NOT NULL;
     `
+	},
+	{
+		version: 3,
+		sql: `
+      ALTER TABLE habit ADD COLUMN description TEXT;
+    `
 	}
 ];
 

@@ -6,12 +6,13 @@ import { HabitNotFound, type CorruptRecord } from '../ports/errors.ts';
 import type { HabitRepository } from '../ports/habit-repository.ts';
 import type { HabitDTO } from '../dto.ts';
 import { toHabitDTO } from '../mappers.ts';
-import { parseGoal, parseOptionalDay } from '../parsing.ts';
+import { parseGoal, parseOptionalDay, parseOptionalDescription } from '../parsing.ts';
 
 /**
  * Every field is optional; only supplied fields are changed. `endDate: null`
  * clears it (it's optional in the domain); `undefined` leaves it unchanged.
- * `goalKind` and `unitMinutes` are fixed at creation and cannot be edited.
+ * `description` follows the same convention. `goalKind` and `unitMinutes`
+ * are fixed at creation and cannot be edited.
  */
 export interface EditHabitInput {
 	habitId: string;
@@ -19,6 +20,7 @@ export interface EditHabitInput {
 	targetUnits?: number;
 	startDate?: string;
 	endDate?: string | null;
+	description?: string | null;
 }
 
 export type EditHabitError = DomainError | HabitNotFound | CorruptRecord;
@@ -62,7 +64,13 @@ export async function editHabit(
 		endDate = endDateResult.value;
 	}
 
-	const updatedResult = habit.update({ name: input.name, goal, startDate, endDate });
+	// Same `undefined` vs. explicit-`null` convention as `endDate` above.
+	let description: Option<string> | undefined = undefined;
+	if (input.description !== undefined) {
+		description = parseOptionalDescription(input.description);
+	}
+
+	const updatedResult = habit.update({ name: input.name, goal, startDate, endDate, description });
 	if (!updatedResult.ok) return err(updatedResult.error);
 
 	await deps.habits.save(updatedResult.value);

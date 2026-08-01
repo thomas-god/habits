@@ -36,6 +36,13 @@ describe('toHabitDTO', () => {
 		expect(dto.startDate).toBe('2024-06-01');
 		expect(dto.endDate).toBeNull();
 		expect(dto.createdAt).toBe('2024-06-01T08:00:00.000Z');
+		expect(dto.description).toBeNull();
+	});
+
+	it('maps a present description', () => {
+		const habit = makeHabit({ description: some('Practice scales') });
+		const dto = toHabitDTO(habit, start);
+		expect(dto.description).toBe('Practice scales');
 	});
 
 	it('serialises a present end date as an ISO string', () => {

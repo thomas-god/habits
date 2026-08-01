@@ -27,6 +27,7 @@ export class Habit {
 	readonly startDate: Day;
 	readonly endDate: Option<Day>;
 	readonly createdAt: Date;
+	readonly description: Option<string>;
 
 	private constructor(params: {
 		id: HabitId;
@@ -36,6 +37,7 @@ export class Habit {
 		startDate: Day;
 		endDate: Option<Day>;
 		createdAt: Date;
+		description: Option<string>;
 	}) {
 		this.id = params.id;
 		this.name = params.name;
@@ -44,6 +46,7 @@ export class Habit {
 		this.startDate = params.startDate;
 		this.endDate = params.endDate;
 		this.createdAt = params.createdAt;
+		this.description = params.description;
 	}
 
 	/** The goal kind, derived from the goal. */
@@ -69,6 +72,7 @@ export class Habit {
 		startDate: Day;
 		endDate?: Option<Day>;
 		createdAt: Date;
+		description?: Option<string>;
 	}): Result<Habit, InvalidHabit> {
 		const name = params.name.trim();
 		if (name.length === 0) {
@@ -78,7 +82,10 @@ export class Habit {
 		if (endDate.isSomeAnd((end) => end.isBefore(params.startDate))) {
 			return err(new InvalidHabit('Habit end date must not be before its start date'));
 		}
-		return ok(new Habit({ ...params, name, endDate }));
+		const description = (params.description ?? none())
+			.map((d) => d.trim())
+			.andThen((d) => (d.length === 0 ? none<string>() : some(d)));
+		return ok(new Habit({ ...params, name, endDate, description }));
 	}
 
 	/**
@@ -111,6 +118,7 @@ export class Habit {
 		goal?: Goal;
 		startDate?: Day;
 		endDate?: Option<Day>;
+		description?: Option<string>;
 	}): Result<Habit, InvalidHabit> {
 		return Habit.from({
 			id: this.id,
@@ -119,7 +127,8 @@ export class Habit {
 			goal: changes.goal ?? this.goal,
 			startDate: changes.startDate ?? this.startDate,
 			endDate: changes.endDate === undefined ? this.endDate : changes.endDate,
-			createdAt: this.createdAt
+			createdAt: this.createdAt,
+			description: changes.description === undefined ? this.description : changes.description
 		});
 	}
 }

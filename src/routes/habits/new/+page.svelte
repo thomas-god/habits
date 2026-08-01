@@ -34,6 +34,19 @@
 				/>
 			</label>
 
+			<!-- Description -->
+			<label class="form-control w-full">
+				<div class="label">
+					<span class="label-text font-medium">Description</span>
+					<span class="label-text-alt text-base-content/40">optional</span>
+				</div>
+				<textarea
+					name="description"
+					placeholder="What does this habit involve?"
+					class="textarea-bordered textarea w-full"
+					rows="2"></textarea>
+			</label>
+
 			<!-- Goal type -->
 			<div class="form-control w-full">
 				<div class="label"><span class="label-text font-medium">Goal type</span></div>

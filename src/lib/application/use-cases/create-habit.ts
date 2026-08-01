@@ -8,6 +8,7 @@ import { parseHabitFields } from '../parsing.ts';
 
 export interface CreateHabitInput {
 	name: string;
+	description?: string | null;
 	unitMinutes?: number | null;
 	goalKind: GoalKind;
 	targetUnits: number;
@@ -29,7 +30,7 @@ export async function createHabit(
 ): Promise<Result<HabitDTO, CreateHabitError>> {
 	const fieldsResult = parseHabitFields(input);
 	if (!fieldsResult.ok) return err(fieldsResult.error);
-	const { unitOfWork, goal, startDate, endDate } = fieldsResult.value;
+	const { unitOfWork, goal, startDate, endDate, description } = fieldsResult.value;
 
 	const habitResult = Habit.from({
 		id: HabitId.generate(),
@@ -38,6 +39,7 @@ export async function createHabit(
 		goal,
 		startDate,
 		endDate,
+		description,
 		createdAt: deps.clock.now()
 	});
 	if (!habitResult.ok) return err(habitResult.error);

@@ -24,6 +24,9 @@
 			{#if data.habit.endDate}
 				→ {formatDate(data.habit.endDate)}{/if}
 		</p>
+		{#if data.habit.description}
+			<p class="mt-1 text-sm text-base-content/70">{data.habit.description}</p>
+		{/if}
 	</div>
 	{#if !data.habit.active}
 		<span class="badge badge-neutral">Ended</span>
@@ -146,6 +149,18 @@
 					/>
 				</label>
 
+				<label class="form-control">
+					<div class="label">
+						<span class="label-text text-sm">Description</span>
+						<span class="label-text-alt text-xs text-base-content/40">optional</span>
+					</div>
+					<textarea
+						name="description"
+						value={data.habit.description ?? ''}
+						class="textarea-bordered textarea textarea-sm"
+						rows="2"></textarea>
+				</label>
+
 				<div class="grid grid-cols-2 gap-4 text-sm">
 					<div>
 						<div class="text-base-content/50">Unit</div>
@@ -201,6 +216,10 @@
 			</form>
 		{:else}
 			<dl class="mt-1 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+				{#if data.habit.description}
+					<dt class="text-base-content/50">Description</dt>
+					<dd class="col-span-1">{data.habit.description}</dd>
+				{/if}
 				<dt class="text-base-content/50">Goal type</dt>
 				<dd class="capitalize">{data.habit.kind}</dd>
 				<dt class="text-base-content/50">Target</dt>

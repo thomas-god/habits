@@ -9,6 +9,7 @@ export const actions: Actions = {
 
 		const result = await useCases.createHabit({
 			name: data.get('name') as string,
+			description: (data.get('description') as string) || null,
 			unitMinutes: unitMinutesRaw ? Number(unitMinutesRaw) : null,
 			goalKind: data.get('goalKind') as 'daily' | 'overall',
 			targetUnits: Number(data.get('targetUnits')),

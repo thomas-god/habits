@@ -97,7 +97,7 @@ describe('SqliteEntryRepository', () => {
 
 	it('returns CorruptRecord when a stored row has a bad habit_id', async () => {
 		// Insert an entry with an invalid (non-UUID) habit_id bypassing the domain.
-		db.prepare('INSERT INTO habit VALUES (?,?,?,?,?,?,?,?)').run(
+		db.prepare('INSERT INTO habit VALUES (?,?,?,?,?,?,?,?,?)').run(
 			'not-a-uuid',
 			'Bad',
 			'daily',
@@ -105,7 +105,8 @@ describe('SqliteEntryRepository', () => {
 			3,
 			'2024-06-01',
 			null,
-			'2024-06-01T00:00:00.000Z'
+			'2024-06-01T00:00:00.000Z',
+			null
 		);
 		db.prepare('INSERT INTO entry VALUES (?,?,?)').run('not-a-uuid', '2024-06-10', 1);
 		// findByKey uses the habit's real UUID, so craft a listByHabit equivalent:

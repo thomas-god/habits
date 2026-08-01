@@ -36,12 +36,20 @@ export function parseOptionalUnitOfWork(
 	return UnitOfWork.ofMinutes(value).map(some);
 }
 
+/** `undefined`/`null`/blank parse to "no description"; otherwise the trimmed string. */
+export function parseOptionalDescription(value: string | null | undefined): Option<string> {
+	if (value === null || value === undefined) return none();
+	const trimmed = value.trim();
+	return trimmed.length === 0 ? none() : some(trimmed);
+}
+
 export interface HabitFieldsInput {
 	unitMinutes?: number | null;
 	goalKind: GoalKind;
 	targetUnits: number;
 	startDate: string;
 	endDate?: string | null;
+	description?: string | null;
 }
 
 export interface ParsedHabitFields {
@@ -49,6 +57,7 @@ export interface ParsedHabitFields {
 	goal: Goal;
 	startDate: Day;
 	endDate: Option<Day>;
+	description: Option<string>;
 }
 
 /** Parse the raw scheduling/goal fields shared by the create/edit habit inputs. */
@@ -69,6 +78,7 @@ export function parseHabitFields(input: HabitFieldsInput): Result<ParsedHabitFie
 		startDate: startDateResult.value,
 		endDate: endDateResult.value,
 		unitOfWork: unitResult.value,
-		goal: goalResult.value
+		goal: goalResult.value,
+		description: parseOptionalDescription(input.description)
 	});
 }

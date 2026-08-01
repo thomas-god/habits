@@ -5,6 +5,7 @@ import {
 	parseGoal,
 	parseHabitFields,
 	parseOptionalDay,
+	parseOptionalDescription,
 	parseOptionalUnitOfWork
 } from './parsing.ts';
 
@@ -69,6 +70,24 @@ describe('parseOptionalUnitOfWork', () => {
 	});
 });
 
+describe('parseOptionalDescription', () => {
+	it('returns none() for null input', () => {
+		expect(parseOptionalDescription(null).isNone()).toBe(true);
+	});
+
+	it('returns none() for undefined input', () => {
+		expect(parseOptionalDescription(undefined).isNone()).toBe(true);
+	});
+
+	it('returns none() for a blank string', () => {
+		expect(parseOptionalDescription('   ').isNone()).toBe(true);
+	});
+
+	it('trims a valid description', () => {
+		expect(parseOptionalDescription('  Practice scales  ').unwrap()).toBe('Practice scales');
+	});
+});
+
 describe('parseHabitFields', () => {
 	const validInput = {
 		unitMinutes: 45,
@@ -83,6 +102,12 @@ describe('parseHabitFields', () => {
 		expect(fields.goal).toBeInstanceOf(DailyGoal);
 		expect(fields.startDate.toISO()).toBe('2024-06-01');
 		expect(fields.endDate.isNone()).toBe(true);
+		expect(fields.description.isNone()).toBe(true);
+	});
+
+	it('parses a valid description', () => {
+		const fields = expectOk(parseHabitFields({ ...validInput, description: '  Practice  ' }));
+		expect(fields.description.unwrap()).toBe('Practice');
 	});
 
 	it('treats an omitted unitMinutes as no unit of work', () => {

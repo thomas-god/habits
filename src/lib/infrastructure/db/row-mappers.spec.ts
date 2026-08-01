@@ -43,6 +43,7 @@ function validHabitRow(overrides: Partial<HabitRow> = {}): HabitRow {
 	return {
 		id: habitId.value,
 		name: 'Piano',
+		description: null,
 		type: 'daily',
 		unit_minutes: 45,
 		goal_units: 3,
@@ -68,6 +69,12 @@ describe('habitToRow', () => {
 		expect(row.start_date).toBe('2024-06-01');
 		expect(row.end_date).toBeNull();
 		expect(row.created_at).toBe('2024-06-01T08:00:00.000Z');
+		expect(row.description).toBeNull();
+	});
+
+	it('serialises a present description', () => {
+		const row = habitToRow(makeHabit({ description: some('Practice scales') }));
+		expect(row.description).toBe('Practice scales');
 	});
 
 	it('serialises an end date', () => {
@@ -98,6 +105,12 @@ describe('rowToHabit', () => {
 		expect(habit.startDate.toISO()).toBe('2024-06-01');
 		expect(habit.endDate.isNone()).toBe(true);
 		expect(habit.createdAt.toISOString()).toBe('2024-06-01T08:00:00.000Z');
+		expect(habit.description.isNone()).toBe(true);
+	});
+
+	it('round-trips a present description', () => {
+		const habit = expectOk(rowToHabit(validHabitRow({ description: 'Practice scales' })));
+		expect(habit.description.unwrap()).toBe('Practice scales');
 	});
 
 	it('parses an overall habit with an end date', () => {

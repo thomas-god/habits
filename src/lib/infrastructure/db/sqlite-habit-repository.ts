@@ -13,10 +13,11 @@ export class SqliteHabitRepository implements HabitRepository {
 
 	constructor(private readonly db: DatabaseSync) {
 		this.upsert = db.prepare(`
-      INSERT INTO habit (id, name, type, unit_minutes, goal_units, start_date, end_date, created_at)
-      VALUES (:id, :name, :type, :unit_minutes, :goal_units, :start_date, :end_date, :created_at)
+      INSERT INTO habit (id, name, description, type, unit_minutes, goal_units, start_date, end_date, created_at)
+      VALUES (:id, :name, :description, :type, :unit_minutes, :goal_units, :start_date, :end_date, :created_at)
       ON CONFLICT(id) DO UPDATE SET
         name         = excluded.name,
+        description  = excluded.description,
         type         = excluded.type,
         unit_minutes = excluded.unit_minutes,
         goal_units   = excluded.goal_units,

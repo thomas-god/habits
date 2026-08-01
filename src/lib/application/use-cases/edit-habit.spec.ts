@@ -52,6 +52,26 @@ describe('editHabit', () => {
 		expect(dto.endDate).toBeNull();
 	});
 
+	it('sets a description', async () => {
+		const { deps, habitId } = await setup();
+		const dto = expectOk(await editHabit(deps, { habitId, description: 'Practice scales' }));
+		expect(dto.description).toBe('Practice scales');
+	});
+
+	it('clears a description with an explicit null', async () => {
+		const { deps, habitId } = await setup();
+		await editHabit(deps, { habitId, description: 'Practice scales' });
+		const dto = expectOk(await editHabit(deps, { habitId, description: null }));
+		expect(dto.description).toBeNull();
+	});
+
+	it('leaves the description unchanged when omitted', async () => {
+		const { deps, habitId } = await setup();
+		await editHabit(deps, { habitId, description: 'Practice scales' });
+		const dto = expectOk(await editHabit(deps, { habitId, name: 'Guitar' }));
+		expect(dto.description).toBe('Practice scales');
+	});
+
 	it('persists the change', async () => {
 		const { deps, habitId } = await setup();
 		await editHabit(deps, { habitId, name: 'Guitar' });

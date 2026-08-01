@@ -18,6 +18,7 @@ import { CorruptRecord } from '../../application/ports/errors.ts';
 export interface HabitRow {
 	id: string;
 	name: string;
+	description: string | null;
 	type: string;
 	unit_minutes: number | null;
 	goal_units: number;
@@ -37,6 +38,7 @@ export function habitToRow(habit: Habit): HabitRow {
 	return {
 		id: habit.id.value,
 		name: habit.name,
+		description: habit.description.match({ some: (d) => d, none: () => null }),
 		type: habit.goal.kind,
 		unit_minutes: habit.unitOfWork.match({ some: (u) => u.minutes, none: () => null }),
 		goal_units: habit.goal.targetUnits,
@@ -84,6 +86,7 @@ export function rowToHabit(row: HabitRow): Result<Habit, CorruptRecord> {
 	const habitResult = Habit.from({
 		id: idResult.value,
 		name: row.name,
+		description: row.description === null ? none() : some(row.description),
 		unitOfWork: unitResult.value,
 		goal: goalResult.value,
 		startDate: startResult.value,

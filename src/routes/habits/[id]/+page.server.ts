@@ -30,7 +30,8 @@ export const actions: Actions = {
 			name: data.get('name') as string,
 			targetUnits: Number(data.get('targetUnits')),
 			startDate: data.get('startDate') as string,
-			endDate: endDateRaw || null
+			endDate: endDateRaw || null,
+			description: (data.get('description') as string) || null
 		});
 		if (!result.ok) return fail(400, { error: result.error.message });
 	},
