@@ -3,6 +3,7 @@ import { Day, DailyGoal, Entry, Habit, HabitId, UnitOfWork, EntryKey } from '../
 import { some } from '../../shared/option.ts';
 import { expectOk } from '../../shared/testing.ts';
 import { CorruptRecord } from '../../application/ports/errors.ts';
+import { NoopLogger } from '../../application/testing.ts';
 import { openDatabase } from './database.ts';
 import { runMigrations } from './migrations.ts';
 import { SqliteHabitRepository } from './sqlite-habit-repository.ts';
@@ -26,7 +27,7 @@ function seedHabit(db: DatabaseSync, name = 'Piano') {
 			createdAt: new Date()
 		})
 	);
-	new SqliteHabitRepository(db).save(habit);
+	new SqliteHabitRepository(db, new NoopLogger()).save(habit);
 	return habit;
 }
 
@@ -37,7 +38,7 @@ describe('SqliteEntryRepository', () => {
 
 	beforeEach(async () => {
 		db = makeDb();
-		repo = new SqliteEntryRepository(db);
+		repo = new SqliteEntryRepository(db, new NoopLogger());
 		habit = seedHabit(db);
 	});
 
@@ -91,7 +92,7 @@ describe('SqliteEntryRepository', () => {
 	it('entries are removed when their habit is deleted (ON DELETE CASCADE)', async () => {
 		const day = expectOk(Day.fromISO('2024-06-10'));
 		await repo.save(expectOk(Entry.create({ habitId: habit.id, day, units: 1 })));
-		new SqliteHabitRepository(db).delete(habit.id);
+		new SqliteHabitRepository(db, new NoopLogger()).delete(habit.id);
 		expect(expectOk(await repo.listByHabit(habit.id))).toHaveLength(0);
 	});
 

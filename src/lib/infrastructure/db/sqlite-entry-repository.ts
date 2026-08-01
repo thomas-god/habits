@@ -3,6 +3,7 @@ import type { Entry, EntryKey, HabitId } from '../../domain/index.ts';
 import { err, ok, type Result } from '../../shared/result.ts';
 import type { EntryRepository } from '../../application/ports/entry-repository.ts';
 import type { CorruptRecord } from '../../application/ports/errors.ts';
+import type { Logger } from '../../application/ports/logger.ts';
 import { entryToRow, rowToEntry, type EntryRow } from './row-mappers.ts';
 
 export class SqliteEntryRepository implements EntryRepository {
@@ -10,7 +11,10 @@ export class SqliteEntryRepository implements EntryRepository {
 	private readonly selectByKey: StatementSync;
 	private readonly selectByHabit: StatementSync;
 
-	constructor(private readonly db: DatabaseSync) {
+	constructor(
+		private readonly db: DatabaseSync,
+		private readonly logger: Logger
+	) {
 		this.upsert = db.prepare(`
       INSERT INTO entry (habit_id, day, units)
       VALUES (?, ?, ?)
@@ -29,7 +33,9 @@ export class SqliteEntryRepository implements EntryRepository {
 		const row = this.selectByKey.get(key.habitId.value, key.day.toISO()) as unknown as
 			EntryRow | undefined;
 		if (row === undefined) return ok(null);
-		return rowToEntry(row);
+		const result = rowToEntry(row);
+		if (!result.ok) this.logCorruptRecord(row.habit_id, row.day, result.error);
+		return result;
 	}
 
 	async listByHabit(habitId: HabitId): Promise<Result<Entry[], CorruptRecord>> {
@@ -37,9 +43,16 @@ export class SqliteEntryRepository implements EntryRepository {
 		const entries: Entry[] = [];
 		for (const row of rows) {
 			const result = rowToEntry(row);
-			if (!result.ok) return err(result.error);
+			if (!result.ok) {
+				this.logCorruptRecord(row.habit_id, row.day, result.error);
+				return err(result.error);
+			}
 			entries.push(result.value);
 		}
 		return ok(entries);
+	}
+
+	private logCorruptRecord(habitId: string, day: string, error: CorruptRecord): void {
+		this.logger.error('entry_repository.corrupt_record', { habitId, day, message: error.message });
 	}
 }

@@ -3,6 +3,7 @@ import { Day, DailyGoal, Habit, HabitId, OverallGoal, UnitOfWork } from '../../d
 import { CorruptRecord } from '../../application/ports/errors.ts';
 import { some } from '../../shared/option.ts';
 import { expectOk } from '../../shared/testing.ts';
+import { NoopLogger } from '../../application/testing.ts';
 import { openDatabase } from './database.ts';
 import { runMigrations } from './migrations.ts';
 import { SqliteHabitRepository } from './sqlite-habit-repository.ts';
@@ -35,7 +36,7 @@ describe('SqliteHabitRepository', () => {
 
 	beforeEach(() => {
 		db = makeDb();
-		repo = new SqliteHabitRepository(db);
+		repo = new SqliteHabitRepository(db, new NoopLogger());
 	});
 
 	it('saves and retrieves a habit by id', async () => {

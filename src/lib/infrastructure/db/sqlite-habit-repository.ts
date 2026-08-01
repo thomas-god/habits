@@ -3,6 +3,7 @@ import type { Habit, HabitId } from '../../domain/index.ts';
 import { err, ok, type Result } from '../../shared/result.ts';
 import type { HabitRepository } from '../../application/ports/habit-repository.ts';
 import type { CorruptRecord } from '../../application/ports/errors.ts';
+import type { Logger } from '../../application/ports/logger.ts';
 import { habitToRow, rowToHabit, type HabitRow } from './row-mappers.ts';
 
 export class SqliteHabitRepository implements HabitRepository {
@@ -11,7 +12,10 @@ export class SqliteHabitRepository implements HabitRepository {
 	private readonly selectAll: StatementSync;
 	private readonly deleteById: StatementSync;
 
-	constructor(private readonly db: DatabaseSync) {
+	constructor(
+		private readonly db: DatabaseSync,
+		private readonly logger: Logger
+	) {
 		this.upsert = db.prepare(`
       INSERT INTO habit (id, name, description, type, unit_minutes, goal_units, start_date, end_date, created_at)
       VALUES (:id, :name, :description, :type, :unit_minutes, :goal_units, :start_date, :end_date, :created_at)
@@ -36,7 +40,9 @@ export class SqliteHabitRepository implements HabitRepository {
 	async findById(id: HabitId): Promise<Result<Habit | null, CorruptRecord>> {
 		const row = this.selectById.get(id.value) as unknown as HabitRow | undefined;
 		if (row === undefined) return ok(null);
-		return rowToHabit(row);
+		const result = rowToHabit(row);
+		if (!result.ok) this.logCorruptRecord(row.id, result.error);
+		return result;
 	}
 
 	async listAll(): Promise<Result<Habit[], CorruptRecord>> {
@@ -44,10 +50,17 @@ export class SqliteHabitRepository implements HabitRepository {
 		const habits: Habit[] = [];
 		for (const row of rows) {
 			const result = rowToHabit(row);
-			if (!result.ok) return err(result.error);
+			if (!result.ok) {
+				this.logCorruptRecord(row.id, result.error);
+				return err(result.error);
+			}
 			habits.push(result.value);
 		}
 		return ok(habits);
+	}
+
+	private logCorruptRecord(habitId: string, error: CorruptRecord): void {
+		this.logger.error('habit_repository.corrupt_record', { habitId, message: error.message });
 	}
 
 	async delete(id: HabitId): Promise<void> {

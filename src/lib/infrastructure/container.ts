@@ -3,6 +3,7 @@ import { runMigrations } from './db/migrations.ts';
 import { SqliteHabitRepository } from './db/sqlite-habit-repository.ts';
 import { SqliteEntryRepository } from './db/sqlite-entry-repository.ts';
 import { SystemClock } from './system-clock.ts';
+import { JsonLogger } from './json-logger.ts';
 
 /**
  * Composition root: the single place that wires concrete adapters to the
@@ -16,8 +17,9 @@ function buildContainer(dbPath?: string) {
 	const db = openDatabase(dbPath);
 	runMigrations(db);
 
-	const habits = new SqliteHabitRepository(db);
-	const entries = new SqliteEntryRepository(db);
+	const logger = new JsonLogger();
+	const habits = new SqliteHabitRepository(db, logger);
+	const entries = new SqliteEntryRepository(db, logger);
 	const clock = new SystemClock();
 
 	const deps = { habits, entries, clock };
@@ -26,6 +28,8 @@ function buildContainer(dbPath?: string) {
 	// all use-case modules into every file that touches the container).
 	return {
 		deps,
+		/** Structured logger, for adapters that sit outside `deps` (e.g. hooks). */
+		logger,
 		/** Close the underlying database (call on process exit / in tests). */
 		close: () => db.close()
 	};

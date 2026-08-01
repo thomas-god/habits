@@ -4,6 +4,7 @@ import type { Clock } from './ports/clock.ts';
 import type { CorruptRecord } from './ports/errors.ts';
 import type { EntryRepository } from './ports/entry-repository.ts';
 import type { HabitRepository } from './ports/habit-repository.ts';
+import type { Logger } from './ports/logger.ts';
 
 /**
  * In-memory fakes implementing the application ports, for use-case tests.
@@ -65,4 +66,10 @@ export class FixedClock implements Clock {
 	now(): Date {
 		return this.instant;
 	}
+}
+
+/** A `Logger` that discards everything, for tests that don't assert on logging. */
+export class NoopLogger implements Logger {
+	warn(): void {}
+	error(): void {}
 }
