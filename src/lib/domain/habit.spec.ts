@@ -106,18 +106,18 @@ describe('Habit.isActive / isEnded', () => {
 	});
 });
 
-describe('Habit.archiveOn', () => {
+describe('Habit.endOn', () => {
 	const persisted = expectOk(makeHabit());
 
-	it('sets the end date to the archive day and preserves the id', () => {
-		const archived = expectOk(persisted.archiveOn(expectOk(Day.fromISO('2024-06-15'))));
-		expect(archived.endDate.unwrap().toISO()).toBe('2024-06-15');
-		expect(archived.id.equals(id)).toBe(true);
-		expect(archived.isActive(expectOk(Day.fromISO('2024-06-16')))).toBe(false);
+	it('sets the end date to the given day and preserves the id', () => {
+		const ended = expectOk(persisted.endOn(expectOk(Day.fromISO('2024-06-15'))));
+		expect(ended.endDate.unwrap().toISO()).toBe('2024-06-15');
+		expect(ended.id.equals(id)).toBe(true);
+		expect(ended.isActive(expectOk(Day.fromISO('2024-06-16')))).toBe(false);
 	});
 
-	it('returns Err when archiving before the start date', () => {
-		expect(expectErr(persisted.archiveOn(expectOk(Day.fromISO('2024-05-01'))))).toBeInstanceOf(
+	it('returns Err when ending before the start date', () => {
+		expect(expectErr(persisted.endOn(expectOk(Day.fromISO('2024-05-01'))))).toBeInstanceOf(
 			InvalidHabit
 		);
 	});

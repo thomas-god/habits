@@ -36,8 +36,8 @@ export const actions: Actions = {
 		if (!result.ok) return fail(400, { error: result.error.message });
 	},
 
-	archive: async ({ params }) => {
-		const result = await useCases.archiveHabit({ habitId: params.id });
+	end: async ({ params }) => {
+		const result = await useCases.endHabit({ habitId: params.id });
 		if (!result.ok) return fail(400, { error: result.error.message });
 		redirect(303, '/');
 	},

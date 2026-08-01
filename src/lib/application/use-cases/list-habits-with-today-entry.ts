@@ -9,8 +9,8 @@ import { toEntryDTO, toHabitDTO } from '../mappers.ts';
 import { asOption } from '../../shared/option.ts';
 
 export interface ListHabitsWithTodayEntryInput {
-	/** Include ended (archived / past-deadline) habits. Defaults to false. */
-	includeArchived?: boolean;
+	/** Include ended (manually ended / past-deadline) habits. Defaults to false. */
+	includeEnded?: boolean;
 }
 
 export type ListHabitsWithTodayEntryError = CorruptRecord;
@@ -30,7 +30,7 @@ export async function listHabitsWithTodayEntry(
 
 	const habitsResult = await deps.habits.listAll();
 	if (!habitsResult.ok) return err(habitsResult.error);
-	const habits = input.includeArchived
+	const habits = input.includeEnded
 		? habitsResult.value
 		: habitsResult.value.filter((habit) => habit.isActive(today));
 

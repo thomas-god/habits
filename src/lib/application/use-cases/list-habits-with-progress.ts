@@ -8,8 +8,8 @@ import type { HabitProgressDTO } from '../dto.ts';
 import { toHabitDTO } from '../mappers.ts';
 
 export interface ListHabitsWithProgressInput {
-	/** Include ended (archived / past-deadline) habits. Defaults to false. */
-	includeArchived?: boolean;
+	/** Include ended (manually ended / past-deadline) habits. Defaults to false. */
+	includeEnded?: boolean;
 }
 
 export type ListHabitsWithProgressError = CorruptRecord;
@@ -29,7 +29,7 @@ export async function listHabitsWithProgress(
 
 	const habitsResult = await deps.habits.listAll();
 	if (!habitsResult.ok) return err(habitsResult.error);
-	const habits = input.includeArchived
+	const habits = input.includeEnded
 		? habitsResult.value
 		: habitsResult.value.filter((habit) => habit.isActive(today));
 

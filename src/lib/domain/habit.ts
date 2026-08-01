@@ -11,8 +11,8 @@ import { UnitOfWork } from './unit-of-work.ts';
  *
  * A habit combines a unit of work (granularity), a goal (the target), and a
  * schedule (a mandatory start date and an optional end date). The end date
- * serves both as an upfront deadline and as the archive marker: archiving a
- * habit simply sets its end date to the day of the archive action.
+ * serves both as an upfront deadline and as the "end habit" marker: ending a
+ * habit simply sets its end date to the day of that action.
  *
  * "Active" is never stored — it is derived from the schedule and the current
  * day, so there is a single source of truth.
@@ -98,15 +98,15 @@ export class Habit {
 		return true;
 	}
 
-	/** Whether the habit has ended (archived or past its deadline) as of `day`. */
+	/** Whether the habit has ended (manually ended or past its deadline) as of `day`. */
 	isEnded(day: Day): boolean {
 		return this.endDate.isSomeAnd((end) => end.isBefore(day));
 	}
 
-	/** A copy archived on `day` — i.e. with its end date set to that day. */
-	archiveOn(day: Day): Result<Habit, InvalidHabit> {
+	/** A copy ended on `day` — i.e. with its end date set to that day. */
+	endOn(day: Day): Result<Habit, InvalidHabit> {
 		if (day.isBefore(this.startDate)) {
-			return err(new InvalidHabit('Cannot archive a habit before its start date'));
+			return err(new InvalidHabit('Cannot end a habit before its start date'));
 		}
 		return ok(new Habit({ ...this, endDate: some(day) }));
 	}

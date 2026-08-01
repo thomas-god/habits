@@ -4,7 +4,7 @@ import { recordEntry } from '../application/use-cases/record-entry.ts';
 import { listHabitsWithProgress } from '../application/use-cases/list-habits-with-progress.ts';
 import { getHabitDetail } from '../application/use-cases/get-habit-detail.ts';
 import { editHabit } from '../application/use-cases/edit-habit.ts';
-import { archiveHabit } from '../application/use-cases/archive-habit.ts';
+import { endHabit } from '../application/use-cases/end-habit.ts';
 import { deleteHabit } from '../application/use-cases/delete-habit.ts';
 import { listHabitsWithTodayEntry } from '../application/use-cases/list-habits-with-today-entry.ts';
 
@@ -27,6 +27,6 @@ export const useCases = {
 		listHabitsWithTodayEntry(deps, input),
 	getHabitDetail: (input: Parameters<typeof getHabitDetail>[1]) => getHabitDetail(deps, input),
 	editHabit: (input: Parameters<typeof editHabit>[1]) => editHabit(deps, input),
-	archiveHabit: (input: Parameters<typeof archiveHabit>[1]) => archiveHabit(deps, input),
+	endHabit: (input: Parameters<typeof endHabit>[1]) => endHabit(deps, input),
 	deleteHabit: (input: Parameters<typeof deleteHabit>[1]) => deleteHabit(deps, input)
 };

@@ -10,6 +10,11 @@
 	let editing = $state(false);
 	let today = new Date().toISOString().slice(0, 10);
 	let unitLabel = $derived(formatUnitLabel(data.habit.unitMinutes));
+	// Default the log-entry date to today, unless the habit ended before
+	// today — then default to its end date, since today would be out of range.
+	let logDefaultDay = $derived(
+		data.habit.endDate && data.habit.endDate < today ? data.habit.endDate : today
+	);
 </script>
 
 <div class="mb-6 flex items-start justify-between gap-4">
@@ -83,38 +88,36 @@
 </div>
 
 <!-- Log entry -->
-{#if data.habit.active}
-	<div class="card mb-4 bg-base-100 shadow-sm">
-		<div class="card-body p-5">
-			<h2 class="card-title text-base">Log work</h2>
-			<form method="POST" action="?/record" use:enhance class="flex items-end gap-3">
-				<label class="form-control flex-1">
-					<div class="label"><span class="label-text text-sm">Date</span></div>
-					<input
-						type="date"
-						name="day"
-						value={today}
-						min={data.habit.startDate}
-						max={data.habit.endDate ?? undefined}
-						class="input-bordered input input-sm"
-					/>
-				</label>
-				<label class="form-control w-28">
-					<div class="label"><span class="label-text text-sm">Units</span></div>
-					<input
-						type="number"
-						name="units"
-						min="0"
-						step="1"
-						value="1"
-						class="input-bordered input input-sm"
-					/>
-				</label>
-				<button type="submit" class="btn mb-0.5 btn-primary btn-sm">Log</button>
-			</form>
-		</div>
+<div class="card mb-4 bg-base-100 shadow-sm">
+	<div class="card-body p-5">
+		<h2 class="card-title text-base">Log work</h2>
+		<form method="POST" action="?/record" use:enhance class="flex items-end gap-3">
+			<label class="form-control flex-1">
+				<div class="label"><span class="label-text text-sm">Date</span></div>
+				<input
+					type="date"
+					name="day"
+					value={logDefaultDay}
+					min={data.habit.startDate}
+					max={data.habit.endDate ?? undefined}
+					class="input-bordered input input-sm"
+				/>
+			</label>
+			<label class="form-control w-28">
+				<div class="label"><span class="label-text text-sm">Units</span></div>
+				<input
+					type="number"
+					name="units"
+					min="0"
+					step="1"
+					value="1"
+					class="input-bordered input input-sm"
+				/>
+			</label>
+			<button type="submit" class="btn mb-0.5 btn-primary btn-sm">Log</button>
+		</form>
 	</div>
-{/if}
+</div>
 
 <!-- Edit form -->
 <div class="card mb-4 bg-base-100 shadow-sm">
@@ -248,15 +251,20 @@
 		<h2 class="card-title text-base text-error">Danger zone</h2>
 		<div class="flex flex-wrap gap-3">
 			{#if data.habit.active}
-				<form method="POST" action="?/archive" use:enhance>
+				<form method="POST" action="?/end" use:enhance>
 					<button
 						type="submit"
 						class="btn btn-sm btn-warning"
 						onclick={(e) => {
-							if (!confirm('Archive this habit?')) e.preventDefault();
+							if (
+								!confirm(
+									"End this habit? It stays on today's list and disappears starting tomorrow."
+								)
+							)
+								e.preventDefault();
 						}}
 					>
-						Archive
+						End habit
 					</button>
 				</form>
 			{/if}

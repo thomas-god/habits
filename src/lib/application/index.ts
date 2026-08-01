@@ -12,5 +12,5 @@ export * from './use-cases/record-entry.ts';
 export * from './use-cases/list-habits-with-progress.ts';
 export * from './use-cases/get-habit-detail.ts';
 export * from './use-cases/edit-habit.ts';
-export * from './use-cases/archive-habit.ts';
+export * from './use-cases/end-habit.ts';
 export * from './use-cases/delete-habit.ts';

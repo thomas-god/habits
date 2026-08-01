@@ -10,6 +10,7 @@
 	let { habit, today } = $derived(habitDetail);
 
 	let unitLabel = $derived(formatUnitLabel(habit.unitMinutes));
+	let endingToday = $derived(habit.endDate === today.day);
 </script>
 
 <div class="card bg-base-100 shadow-sm transition-shadow hover:shadow-md">
@@ -19,6 +20,11 @@
 			<div>
 				<a href="/habits/{habit.id}" class="card-title text-lg hover:underline">{habit.name}</a>
 			</div>
+			{#if endingToday}
+				<span class="badge badge-sm badge-ghost text-base-content/50">Ending today</span>
+			{:else if !habit.active}
+				<span class="badge badge-sm badge-neutral">Ended</span>
+			{/if}
 		</div>
 
 		<!-- Unit grid -->
@@ -29,24 +35,26 @@
 		{/if}
 
 		<div class="flex flex-row">
-			<!-- +/- controls -->
-			<div class="join">
-				<form method="POST" action="?/record" use:enhance class="join-item">
-					<input type="hidden" name="habitId" value={habit.id} />
-					<input type="hidden" name="delta" value="-1" />
-					<button class="btn btn-ghost btn-sm" aria-label="Remove one unit">−</button>
-				</form>
-				{#if unitLabel.isSome()}
-					<div class="join-item p-2 text-sm">
-						{unitLabel.value}
-					</div>
-				{/if}
-				<form method="POST" action="?/record" use:enhance class="join-item">
-					<input type="hidden" name="habitId" value={habit.id} />
-					<input type="hidden" name="delta" value="1" />
-					<button class="btn btn-ghost btn-sm" aria-label="Add one unit">+</button>
-				</form>
-			</div>
+			{#if habit.active}
+				<!-- +/- controls -->
+				<div class="join">
+					<form method="POST" action="?/record" use:enhance class="join-item">
+						<input type="hidden" name="habitId" value={habit.id} />
+						<input type="hidden" name="delta" value="-1" />
+						<button class="btn btn-ghost btn-sm" aria-label="Remove one unit">−</button>
+					</form>
+					{#if unitLabel.isSome()}
+						<div class="join-item p-2 text-sm">
+							{unitLabel.value}
+						</div>
+					{/if}
+					<form method="POST" action="?/record" use:enhance class="join-item">
+						<input type="hidden" name="habitId" value={habit.id} />
+						<input type="hidden" name="delta" value="1" />
+						<button class="btn btn-ghost btn-sm" aria-label="Add one unit">+</button>
+					</form>
+				</div>
+			{/if}
 			<div class="ml-auto">
 				<a href="/habits/{habit.id}" class="btn btn-ghost btn-xs">Details →</a>
 			</div>

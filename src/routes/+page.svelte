@@ -33,8 +33,12 @@
 
 {#if data.habits.length > 0}
 	<div class="mt-6 text-center">
-		<a href="/?archived=1" class="text-xs text-base-content/40 hover:underline">
-			Show archived habits
-		</a>
+		{#if data.includeEnded}
+			<a href="/" class="text-xs text-base-content/40 hover:underline"> Hide ended habits </a>
+		{:else}
+			<a href="/?ended=1" class="text-xs text-base-content/40 hover:underline">
+				Show ended habits
+			</a>
+		{/if}
 	</div>
 {/if}

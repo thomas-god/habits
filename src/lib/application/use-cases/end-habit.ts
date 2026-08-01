@@ -6,22 +6,22 @@ import type { HabitRepository } from '../ports/habit-repository.ts';
 import type { HabitDTO } from '../dto.ts';
 import { toHabitDTO } from '../mappers.ts';
 
-export interface ArchiveHabitInput {
+export interface EndHabitInput {
 	habitId: string;
 }
 
-export type ArchiveHabitError = DomainError | HabitNotFound | CorruptRecord;
+export type EndHabitError = DomainError | HabitNotFound | CorruptRecord;
 
-export interface ArchiveHabitDeps {
+export interface EndHabitDeps {
 	habits: HabitRepository;
 	clock: Clock;
 }
 
-/** Archive a habit by setting its end date to today. */
-export async function archiveHabit(
-	deps: ArchiveHabitDeps,
-	input: ArchiveHabitInput
-): Promise<Result<HabitDTO, ArchiveHabitError>> {
+/** End a habit by setting its end date to today. */
+export async function endHabit(
+	deps: EndHabitDeps,
+	input: EndHabitInput
+): Promise<Result<HabitDTO, EndHabitError>> {
 	const idResult = HabitId.fromString(input.habitId);
 	if (!idResult.ok) return err(idResult.error);
 
@@ -30,9 +30,9 @@ export async function archiveHabit(
 	if (!habitResult.value) return err(new HabitNotFound(input.habitId));
 
 	const today = deps.clock.today();
-	const archivedResult = habitResult.value.archiveOn(today);
-	if (!archivedResult.ok) return err(archivedResult.error);
+	const endedResult = habitResult.value.endOn(today);
+	if (!endedResult.ok) return err(endedResult.error);
 
-	await deps.habits.save(archivedResult.value);
-	return ok(toHabitDTO(archivedResult.value, today));
+	await deps.habits.save(endedResult.value);
+	return ok(toHabitDTO(endedResult.value, today));
 }

@@ -2,10 +2,11 @@ import { useCases } from '$lib/server/app.js';
 import { fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types.js';
 
-export const load: PageServerLoad = async () => {
-	const result = await useCases.listHabitsWithTodayEntry();
+export const load: PageServerLoad = async ({ url }) => {
+	const includeEnded = url.searchParams.get('ended') === '1';
+	const result = await useCases.listHabitsWithTodayEntry({ includeEnded });
 	if (!result.ok) throw new Error(result.error.message);
-	return { habits: result.value };
+	return { habits: result.value, includeEnded };
 };
 
 export const actions: Actions = {

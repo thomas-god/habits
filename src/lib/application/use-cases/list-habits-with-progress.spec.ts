@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { Day } from '../../domain/index.ts';
 import { expectOk } from '../../shared/testing.ts';
 import { createHabit } from './create-habit.ts';
-import { archiveHabit } from './archive-habit.ts';
+import { endHabit } from './end-habit.ts';
 import { recordEntry } from './record-entry.ts';
 import { listHabitsWithProgress } from './list-habits-with-progress.ts';
 import { FixedClock, InMemoryEntryRepository, InMemoryHabitRepository } from '../testing.ts';
@@ -36,8 +36,8 @@ describe('listHabitsWithProgress', () => {
 		expect(list[0].progress.doneUnits).toBe(1);
 	});
 
-	it('excludes archived habits by default (from the day after archiving)', async () => {
-		// The archive day itself is still within [start, end] (inclusive), so we
+	it('excludes ended habits by default (from the day after ending)', async () => {
+		// The end day itself is still within [start, end] (inclusive), so we
 		// list "the day after" to observe the habit becoming inactive.
 		const { deps, habits, entries } = await setup();
 		const habit = expectOk(
@@ -49,7 +49,7 @@ describe('listHabitsWithProgress', () => {
 				startDate: '2024-06-01'
 			})
 		);
-		await archiveHabit(deps, { habitId: habit.id }); // ends on 2024-06-10
+		await endHabit(deps, { habitId: habit.id }); // ends on 2024-06-10
 
 		const nextDayDeps = {
 			habits,
@@ -58,7 +58,7 @@ describe('listHabitsWithProgress', () => {
 		};
 		expect(expectOk(await listHabitsWithProgress(nextDayDeps))).toHaveLength(0);
 		expect(
-			expectOk(await listHabitsWithProgress(nextDayDeps, { includeArchived: true }))
+			expectOk(await listHabitsWithProgress(nextDayDeps, { includeEnded: true }))
 		).toHaveLength(1);
 	});
 
