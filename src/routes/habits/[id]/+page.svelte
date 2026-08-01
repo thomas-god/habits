@@ -138,18 +138,18 @@
 				}}
 				class="mt-3 flex flex-col gap-4"
 			>
-				<label class="form-control">
+				<label class="form-control w-full">
 					<div class="label"><span class="label-text text-sm">Name</span></div>
 					<input
 						type="text"
 						name="name"
 						value={data.habit.name}
-						class="input-bordered input input-sm"
+						class="input-bordered input w-full input-sm"
 						required
 					/>
 				</label>
 
-				<label class="form-control">
+				<label class="form-control w-full">
 					<div class="label">
 						<span class="label-text text-sm">Description</span>
 						<span class="label-text-alt text-xs text-base-content/40">optional</span>
@@ -157,7 +157,7 @@
 					<textarea
 						name="description"
 						value={data.habit.description ?? ''}
-						class="textarea-bordered textarea textarea-sm"
+						class="textarea-bordered textarea w-full textarea-sm"
 						rows="2"></textarea>
 				</label>
 
@@ -172,7 +172,7 @@
 					</div>
 				</div>
 
-				<label class="form-control">
+				<label class="form-control w-full">
 					<div class="label"><span class="label-text text-sm">Target units</span></div>
 					<input
 						type="number"
@@ -180,23 +180,23 @@
 						min="1"
 						step="1"
 						value={data.habit.targetUnits}
-						class="input-bordered input input-sm"
+						class="input-bordered input w-full input-sm"
 						required
 					/>
 				</label>
 
 				<div class="grid grid-cols-2 gap-4">
-					<label class="form-control">
+					<label class="form-control w-full">
 						<div class="label"><span class="label-text text-sm">Start date</span></div>
 						<input
 							type="date"
 							name="startDate"
 							value={data.habit.startDate}
-							class="input-bordered input input-sm"
+							class="input-bordered input w-full input-sm"
 							required
 						/>
 					</label>
-					<label class="form-control">
+					<label class="form-control w-full">
 						<div class="label">
 							<span class="label-text text-sm">End date</span>
 							<span class="label-text-alt text-xs text-base-content/40">optional</span>
@@ -205,7 +205,7 @@
 							type="date"
 							name="endDate"
 							value={data.habit.endDate ?? ''}
-							class="input-bordered input input-sm"
+							class="input-bordered input w-full input-sm"
 						/>
 					</label>
 				</div>
