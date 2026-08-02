@@ -35,6 +35,22 @@ volumes:
 | `ORIGIN`        | _(none)_          | Public URL — required when behind a proxy/TLS |
 | `DATABASE_PATH` | `/data/habits.db` | Path to the SQLite database file              |
 
+## PWA support
+
+Habits is a basic installable PWA: it ships a web app manifest and a service
+worker that caches the static app shell, so it can be added to a phone's home
+screen and loads instantly on repeat visits. It does **not** cache habit data
+or work offline — every page load and form submission still talks to the
+server.
+
+> **HTTPS required.** Service workers only run in a [secure
+> context](https://developer.mozilla.org/en-US/docs/Web/Security/Secure_Contexts) —
+> `https://` origins, or `http://localhost`. If you deploy behind plain HTTP on
+> a LAN IP or hostname (no TLS), the service worker won't register and the
+> app won't be installable, though the site itself still works normally.
+> Put a reverse proxy with TLS (Caddy, Tailscale, etc.) in front to get PWA
+> install support.
+
 ## Releases
 
 Docker images are published to the GitHub Container Registry on every `v*.*.*`
