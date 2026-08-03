@@ -110,4 +110,41 @@ describe('editHabit', () => {
 		const error = expectErr(await editHabit(deps, { habitId, targetUnits: 0 }));
 		expect(error).toBeInstanceOf(InvalidValue);
 	});
+
+	it('changes the goal kind, reusing the existing target when none is supplied', async () => {
+		const { deps, habitId } = await setup();
+		const dto = expectOk(await editHabit(deps, { habitId, goalKind: 'overall' }));
+		expect(dto.kind).toBe('overall');
+		expect(dto.targetUnits).toBe(4);
+		expect(dto.unitMinutes).toBe(45);
+	});
+
+	it('changes the goal kind and target together', async () => {
+		const { deps, habitId } = await setup();
+		const dto = expectOk(await editHabit(deps, { habitId, goalKind: 'overall', targetUnits: 50 }));
+		expect(dto.kind).toBe('overall');
+		expect(dto.targetUnits).toBe(50);
+	});
+
+	it('switches to a progress goal, dropping the target', async () => {
+		const { deps, habitId } = await setup();
+		const dto = expectOk(await editHabit(deps, { habitId, goalKind: 'progress' }));
+		expect(dto.kind).toBe('progress');
+		expect(dto.targetUnits).toBeNull();
+	});
+
+	it('switches from a progress goal back to a target-based one when a target is supplied', async () => {
+		const { deps, habitId } = await setup();
+		await editHabit(deps, { habitId, goalKind: 'progress' });
+		const dto = expectOk(await editHabit(deps, { habitId, goalKind: 'daily', targetUnits: 10 }));
+		expect(dto.kind).toBe('daily');
+		expect(dto.targetUnits).toBe(10);
+	});
+
+	it('rejects switching from a progress goal to a target-based one without a target', async () => {
+		const { deps, habitId } = await setup();
+		await editHabit(deps, { habitId, goalKind: 'progress' });
+		const error = expectErr(await editHabit(deps, { habitId, goalKind: 'daily' }));
+		expect(error).toBeInstanceOf(InvalidValue);
+	});
 });

@@ -1,4 +1,4 @@
-import { Day, HabitId, type DomainError } from '../../domain/index.ts';
+import { Day, HabitId, InvalidValue, type DomainError, type GoalKind } from '../../domain/index.ts';
 import type { Option } from '../../shared/option.ts';
 import { err, ok, type Result } from '../../shared/result.ts';
 import type { Clock } from '../ports/clock.ts';
@@ -11,12 +11,17 @@ import { parseGoal, parseOptionalDay, parseOptionalDescription } from '../parsin
 /**
  * Every field is optional; only supplied fields are changed. `endDate: null`
  * clears it (it's optional in the domain); `undefined` leaves it unchanged.
- * `description` follows the same convention. `goalKind` and `unitMinutes`
- * are fixed at creation and cannot be edited.
+ * `description` follows the same convention. `goalKind` and `targetUnits`
+ * together redefine the goal: changing either re-derives the goal, falling
+ * back to the habit's current kind/target for whichever one is omitted.
+ * Existing entries stay valid across a goal change since they only record
+ * raw units; just the dynamically computed progress is affected.
+ * `unitMinutes` is fixed at creation and cannot be edited.
  */
 export interface EditHabitInput {
 	habitId: string;
 	name?: string;
+	goalKind?: GoalKind;
 	targetUnits?: number;
 	startDate?: string;
 	endDate?: string | null;
@@ -43,8 +48,14 @@ export async function editHabit(
 	const habit = habitResult.value;
 
 	let goal = habit.goal;
-	if (input.targetUnits !== undefined) {
-		const goalResult = parseGoal(habit.kind, input.targetUnits);
+	if (input.goalKind !== undefined || input.targetUnits !== undefined) {
+		const kind = input.goalKind ?? habit.kind;
+		const targetUnits =
+			input.targetUnits ?? ('targetUnits' in habit.goal ? habit.goal.targetUnits : undefined);
+		if (kind !== 'progress' && targetUnits === undefined) {
+			return err(new InvalidValue(`A target is required for a '${kind}' goal`));
+		}
+		const goalResult = parseGoal(kind, targetUnits ?? 0);
 		if (!goalResult.ok) return err(goalResult.error);
 		goal = goalResult.value;
 	}

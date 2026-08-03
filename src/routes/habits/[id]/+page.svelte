@@ -8,6 +8,7 @@
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
 	let editing = $state(false);
+	let goalKind: 'daily' | 'overall' | 'progress' = $state(data.habit.kind);
 	let today = new Date().toISOString().slice(0, 10);
 	let unitLabel = $derived(formatUnitLabel(data.habit.unitMinutes));
 	// Default the log-entry date to today, unless the habit ended before
@@ -132,7 +133,13 @@
 	<div class="card-body p-5">
 		<div class="flex items-center justify-between">
 			<h2 class="card-title text-base">Settings</h2>
-			<button class="btn btn-ghost btn-xs" onclick={() => (editing = !editing)}>
+			<button
+				class="btn btn-ghost btn-xs"
+				onclick={() => {
+					editing = !editing;
+					if (editing) goalKind = data.habit.kind;
+				}}
+			>
 				{editing ? 'Cancel' : 'Edit'}
 			</button>
 		</div>
@@ -172,18 +179,48 @@
 						rows="2"></textarea>
 				</label>
 
-				<div class="grid grid-cols-2 gap-4 text-sm">
-					<div>
-						<div class="text-base-content/50">Unit</div>
-						<div>{unitLabel.unwrapOr('None')}</div>
-					</div>
-					<div>
-						<div class="text-base-content/50">Goal type</div>
-						<div class="capitalize">{data.habit.kind}</div>
+				<div class="text-sm">
+					<div class="text-base-content/50">Unit</div>
+					<div>{unitLabel.unwrapOr('None')}</div>
+				</div>
+
+				<div class="form-control w-full">
+					<div class="label"><span class="label-text text-sm">Goal type</span></div>
+					<div class="flex flex-wrap gap-4">
+						<label class="label cursor-pointer gap-2">
+							<input
+								type="radio"
+								name="goalKind"
+								value="daily"
+								class="radio radio-sm radio-primary"
+								bind:group={goalKind}
+							/>
+							<span class="label-text text-sm">Daily target</span>
+						</label>
+						<label class="label cursor-pointer gap-2">
+							<input
+								type="radio"
+								name="goalKind"
+								value="overall"
+								class="radio radio-sm radio-primary"
+								bind:group={goalKind}
+							/>
+							<span class="label-text text-sm">Overall target</span>
+						</label>
+						<label class="label cursor-pointer gap-2">
+							<input
+								type="radio"
+								name="goalKind"
+								value="progress"
+								class="radio radio-sm radio-primary"
+								bind:group={goalKind}
+							/>
+							<span class="label-text text-sm">Progress (no target)</span>
+						</label>
 					</div>
 				</div>
 
-				{#if data.habit.kind !== 'progress'}
+				{#if goalKind !== 'progress'}
 					<label class="form-control w-full">
 						<div class="label"><span class="label-text text-sm">Target units</span></div>
 						<input
@@ -191,7 +228,7 @@
 							name="targetUnits"
 							min="1"
 							step="1"
-							value={data.habit.targetUnits}
+							value={data.habit.targetUnits ?? ''}
 							class="input-bordered input w-full input-sm"
 							required
 						/>

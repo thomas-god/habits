@@ -25,10 +25,12 @@ export const actions: Actions = {
 	edit: async ({ request, params }) => {
 		const data = await request.formData();
 		const endDateRaw = data.get('endDate') as string;
+		const goalKind = data.get('goalKind') as 'daily' | 'overall' | 'progress';
 		const result = await useCases.editHabit({
 			habitId: params.id,
 			name: data.get('name') as string,
-			targetUnits: Number(data.get('targetUnits')),
+			goalKind,
+			targetUnits: goalKind === 'progress' ? undefined : Number(data.get('targetUnits')),
 			startDate: data.get('startDate') as string,
 			endDate: endDateRaw || null,
 			description: (data.get('description') as string) || null
