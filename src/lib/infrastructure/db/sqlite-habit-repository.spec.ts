@@ -99,7 +99,7 @@ describe('SqliteHabitRepository', () => {
 		await repo.save(habit);
 		const found = expectOk(await repo.findById(habit.id));
 		expect(found?.kind).toBe('overall');
-		expect(found?.goal.targetUnits).toBe(100);
+		expect((found?.goal as OverallGoal).targetUnits).toBe(100);
 	});
 
 	it('returns CorruptRecord when a stored row violates invariants', async () => {

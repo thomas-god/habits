@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import type { ActionData, PageData } from './$types.js';
-	import type { DailyProgress, OverallProgress } from '$lib/domain/index.js';
+	import type { DailyProgress, OverallProgress, ProgressGoalProgress } from '$lib/domain/index.js';
 	import { formatDate, formatTotalUnits, formatPercent, formatUnitLabel } from '$lib/ui/format.js';
 	import HistoryGrid from '$lib/ui/components/molecules/HistoryGrid.svelte';
 
@@ -57,6 +57,14 @@
 				<span class="text-2xl font-semibold {p.met ? 'text-success' : 'text-base-content/40'}">
 					{formatPercent(p.ratio)}
 				</span>
+			</div>
+		{:else if data.progress.kind === 'progress'}
+			{@const p = data.progress as ProgressGoalProgress}
+			<div class="flex items-end justify-between">
+				<div>
+					<p class="text-3xl font-bold">{formatTotalUnits(p.doneUnits, data.habit.unitMinutes)}</p>
+					<p class="text-sm text-base-content/50">total logged</p>
+				</div>
 			</div>
 		{:else}
 			{@const p = data.progress as OverallProgress}
@@ -175,18 +183,20 @@
 					</div>
 				</div>
 
-				<label class="form-control w-full">
-					<div class="label"><span class="label-text text-sm">Target units</span></div>
-					<input
-						type="number"
-						name="targetUnits"
-						min="1"
-						step="1"
-						value={data.habit.targetUnits}
-						class="input-bordered input w-full input-sm"
-						required
-					/>
-				</label>
+				{#if data.habit.kind !== 'progress'}
+					<label class="form-control w-full">
+						<div class="label"><span class="label-text text-sm">Target units</span></div>
+						<input
+							type="number"
+							name="targetUnits"
+							min="1"
+							step="1"
+							value={data.habit.targetUnits}
+							class="input-bordered input w-full input-sm"
+							required
+						/>
+					</label>
+				{/if}
 
 				<div class="grid grid-cols-2 gap-4">
 					<label class="form-control w-full">
@@ -225,13 +235,15 @@
 				{/if}
 				<dt class="text-base-content/50">Goal type</dt>
 				<dd class="capitalize">{data.habit.kind}</dd>
-				<dt class="text-base-content/50">Target</dt>
-				<dd>
-					{data.habit.targetUnits} units ({formatTotalUnits(
-						data.habit.targetUnits,
-						data.habit.unitMinutes
-					)})
-				</dd>
+				{#if data.habit.kind !== 'progress' && data.habit.targetUnits !== null}
+					<dt class="text-base-content/50">Target</dt>
+					<dd>
+						{data.habit.targetUnits} units ({formatTotalUnits(
+							data.habit.targetUnits,
+							data.habit.unitMinutes
+						)})
+					</dd>
+				{/if}
 				<dt class="text-base-content/50">Unit</dt>
 				<dd>{unitLabel.unwrapOr('None')}</dd>
 				<dt class="text-base-content/50">Start</dt>

@@ -14,7 +14,8 @@ export interface HabitDTO {
 	readonly description: string | null;
 	readonly unitMinutes: number | null;
 	readonly kind: GoalKind;
-	readonly targetUnits: number;
+	/** null for a "progress" goal, which has no target. */
+	readonly targetUnits: number | null;
 	readonly startDate: string;
 	readonly endDate: string | null;
 	readonly createdAt: string;

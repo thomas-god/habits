@@ -21,7 +21,7 @@
 				<a href="/habits/{habit.id}" class="card-title text-lg hover:underline">{habit.name}</a>
 			</div>
 			{#if endingToday}
-				<span class="badge badge-sm badge-ghost text-base-content/50">Ending today</span>
+				<span class="badge badge-ghost badge-sm text-base-content/50">Ending today</span>
 			{:else if !habit.active}
 				<span class="badge badge-sm badge-neutral">Ended</span>
 			{/if}
@@ -29,7 +29,7 @@
 
 		<!-- Unit grid -->
 		{#if habit.kind === 'daily'}
-			<UnitGrid done={today.units} target={some(habit.targetUnits)} />
+			<UnitGrid done={today.units} target={some(habit.targetUnits ?? 0)} />
 		{:else}
 			<UnitGrid done={today.units} target={none()} />
 		{/if}

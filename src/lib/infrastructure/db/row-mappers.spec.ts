@@ -6,6 +6,7 @@ import {
 	Habit,
 	HabitId,
 	OverallGoal,
+	ProgressGoal,
 	UnitOfWork
 } from '../../domain/index.ts';
 import { CorruptRecord } from '../../application/ports/errors.ts';
@@ -88,6 +89,12 @@ describe('habitToRow', () => {
 		expect(row.goal_units).toBe(100);
 	});
 
+	it('maps a progress goal to a null goal_units', () => {
+		const row = habitToRow(makeHabit({ goal: ProgressGoal.of() }));
+		expect(row.type).toBe('progress');
+		expect(row.goal_units).toBeNull();
+	});
+
 	it('maps a habit with no unit of work to a null unit_minutes', () => {
 		const row = habitToRow(makeHabit({ unitOfWork: none() }));
 		expect(row.unit_minutes).toBeNull();
@@ -101,7 +108,7 @@ describe('rowToHabit', () => {
 		expect(habit.name).toBe('Piano');
 		expect(habit.unitOfWork.unwrap().minutes).toBe(45);
 		expect(habit.kind).toBe('daily');
-		expect(habit.goal.targetUnits).toBe(3);
+		expect((habit.goal as DailyGoal).targetUnits).toBe(3);
 		expect(habit.startDate.toISO()).toBe('2024-06-01');
 		expect(habit.endDate.isNone()).toBe(true);
 		expect(habit.createdAt.toISOString()).toBe('2024-06-01T08:00:00.000Z');
@@ -119,6 +126,22 @@ describe('rowToHabit', () => {
 		);
 		expect(habit.kind).toBe('overall');
 		expect(habit.endDate.unwrap().toISO()).toBe('2024-08-31');
+	});
+
+	it('parses a progress habit with a null goal_units', () => {
+		const habit = expectOk(rowToHabit(validHabitRow({ type: 'progress', goal_units: null })));
+		expect(habit.kind).toBe('progress');
+	});
+
+	it('parses a progress habit ignoring a stray goal_units value', () => {
+		const habit = expectOk(rowToHabit(validHabitRow({ type: 'progress', goal_units: 5 })));
+		expect(habit.kind).toBe('progress');
+	});
+
+	it('returns CorruptRecord for a daily row with a null goal_units', () => {
+		expect(expectErr(rowToHabit(validHabitRow({ goal_units: null })))).toBeInstanceOf(
+			CorruptRecord
+		);
 	});
 
 	it('returns CorruptRecord for an invalid habit id', () => {

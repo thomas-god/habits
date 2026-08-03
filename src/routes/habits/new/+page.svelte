@@ -7,6 +7,7 @@
 
 	// Live preview of unit label
 	let unitMinutes: number | undefined = $state(undefined);
+	let goalKind: 'daily' | 'overall' | 'progress' = $state('daily');
 	let today = new Date().toISOString().slice(0, 10);
 </script>
 
@@ -52,12 +53,34 @@
 				<div class="label"><span class="label-text font-medium">Goal type</span></div>
 				<div class="flex gap-4">
 					<label class="label cursor-pointer gap-2">
-						<input type="radio" name="goalKind" value="daily" class="radio radio-primary" checked />
+						<input
+							type="radio"
+							name="goalKind"
+							value="daily"
+							class="radio radio-primary"
+							bind:group={goalKind}
+						/>
 						<span class="label-text">Daily target</span>
 					</label>
 					<label class="label cursor-pointer gap-2">
-						<input type="radio" name="goalKind" value="overall" class="radio radio-primary" />
+						<input
+							type="radio"
+							name="goalKind"
+							value="overall"
+							class="radio radio-primary"
+							bind:group={goalKind}
+						/>
 						<span class="label-text">Overall target</span>
+					</label>
+					<label class="label cursor-pointer gap-2">
+						<input
+							type="radio"
+							name="goalKind"
+							value="progress"
+							class="radio radio-primary"
+							bind:group={goalKind}
+						/>
+						<span class="label-text">Progress (no target)</span>
 					</label>
 				</div>
 			</div>
@@ -85,18 +108,20 @@
 			</label>
 
 			<!-- Target units -->
-			<label class="form-control w-full">
-				<div class="label"><span class="label-text font-medium">Target (units)</span></div>
-				<input
-					type="number"
-					name="targetUnits"
-					min="1"
-					step="1"
-					placeholder="e.g. 3"
-					class="input-bordered input w-full"
-					required
-				/>
-			</label>
+			{#if goalKind !== 'progress'}
+				<label class="form-control w-full">
+					<div class="label"><span class="label-text font-medium">Target (units)</span></div>
+					<input
+						type="number"
+						name="targetUnits"
+						min="1"
+						step="1"
+						placeholder="e.g. 3"
+						class="input-bordered input w-full"
+						required
+					/>
+				</label>
+			{/if}
 
 			<!-- Dates -->
 			<div class="grid grid-cols-2 gap-4">

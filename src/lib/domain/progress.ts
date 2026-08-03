@@ -31,7 +31,12 @@ export interface OverallProgress {
 	readonly requiredUnitsPerDay: number | null;
 }
 
-export type Progress = DailyProgress | OverallProgress;
+export interface ProgressGoalProgress {
+	readonly kind: 'progress';
+	readonly doneUnits: number;
+}
+
+export type Progress = DailyProgress | OverallProgress | ProgressGoalProgress;
 
 /** Progress of a daily-goal habit for a single day, given the units done that day. */
 export function dailyProgress(habit: Habit, unitsDone: number): DailyProgress {
@@ -83,6 +88,14 @@ export function overallProgress(habit: Habit, unitsDone: number, today: Day): Ov
 	};
 }
 
+/** Cumulative progress of a progress-goal habit: just how much has been done, no target. */
+export function progressGoalProgress(habit: Habit, unitsDone: number): ProgressGoalProgress {
+	if (habit.goal.kind !== 'progress') {
+		throw new Error('progressGoalProgress requires a habit with a progress goal');
+	}
+	return { kind: 'progress', doneUnits: unitsDone };
+}
+
 function ratioOf(done: number, target: number): number {
 	if (target <= 0) return 0;
 	return Math.min(1, done / target);
@@ -98,6 +111,9 @@ export function progressFor(habit: Habit, entries: readonly Entry[], today: Day)
 	if (habit.kind === 'daily') {
 		const todaysEntry = entries.find((entry) => entry.day.equals(today));
 		return dailyProgress(habit, todaysEntry?.units ?? 0);
+	}
+	if (habit.kind === 'progress') {
+		return progressGoalProgress(habit, totalUnits(entries));
 	}
 	return overallProgress(habit, totalUnits(entries), today);
 }

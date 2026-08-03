@@ -5,7 +5,9 @@ import {
 	Habit,
 	HabitId,
 	OverallGoal,
-	UnitOfWork
+	ProgressGoal,
+	UnitOfWork,
+	type Goal
 } from '../../domain/index.ts';
 import { none, some, type Option } from '../../shared/option.ts';
 import { err, ok, type Result } from '../../shared/result.ts';
@@ -21,7 +23,8 @@ export interface HabitRow {
 	description: string | null;
 	type: string;
 	unit_minutes: number | null;
-	goal_units: number;
+	/** null for a "progress" goal, which has no target. */
+	goal_units: number | null;
 	start_date: string;
 	end_date: string | null;
 	created_at: string;
@@ -41,7 +44,7 @@ export function habitToRow(habit: Habit): HabitRow {
 		description: habit.description.match({ some: (d) => d, none: () => null }),
 		type: habit.goal.kind,
 		unit_minutes: habit.unitOfWork.match({ some: (u) => u.minutes, none: () => null }),
-		goal_units: habit.goal.targetUnits,
+		goal_units: habit.goal.kind === 'progress' ? null : habit.goal.targetUnits,
 		start_date: habit.startDate.toISO(),
 		end_date: habit.endDate.match({ some: (d) => d.toISO(), none: () => null }),
 		created_at: habit.createdAt.toISOString()
@@ -75,12 +78,19 @@ export function rowToHabit(row: HabitRow): Result<Habit, CorruptRecord> {
 			: UnitOfWork.ofMinutes(row.unit_minutes).map(some);
 	if (!unitResult.ok) return corrupt(row.id, 'unit_minutes', unitResult.error);
 
-	const goalResult =
-		row.type === 'daily'
+	const goalResult: Result<Goal, CorruptRecord> =
+		row.type === 'daily' && row.goal_units !== null
 			? DailyGoal.of(row.goal_units)
-			: row.type === 'overall'
+			: row.type === 'overall' && row.goal_units !== null
 				? OverallGoal.of(row.goal_units)
-				: err(new CorruptRecord(`Unknown habit type: "${row.type}"`, null));
+				: row.type === 'progress'
+					? ok(ProgressGoal.of())
+					: err(
+							new CorruptRecord(
+								`Unknown habit type/goal_units: "${row.type}"/${row.goal_units}`,
+								null
+							)
+						);
 	if (!goalResult.ok) return corrupt(row.id, 'type/goal_units', goalResult.error);
 
 	const habitResult = Habit.from({

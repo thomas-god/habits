@@ -8,9 +8,9 @@ import { InvalidValue } from './errors.ts';
  * Modelled as a discriminated union so that daily vs. overall targets are
  * distinguishable at the type level and exhaustively handled.
  */
-export type GoalKind = 'daily' | 'overall';
+export type GoalKind = 'daily' | 'overall' | 'progress';
 
-export type Goal = DailyGoal | OverallGoal;
+export type Goal = DailyGoal | OverallGoal | ProgressGoal;
 
 /** A target amount of work to reach *every day* (e.g. 3h of piano per day). */
 export class DailyGoal {
@@ -37,6 +37,20 @@ export class OverallGoal {
 
 	static of(targetUnits: number): Result<OverallGoal, InvalidValue> {
 		return validateTarget(targetUnits).map(() => new OverallGoal(targetUnits));
+	}
+}
+
+/**
+ * A cumulative habit with no target — just tracks how much work was done,
+ * with no prior expectation of how much "should" get done.
+ */
+export class ProgressGoal {
+	readonly kind = 'progress' as const;
+
+	private constructor() {}
+
+	static of(): ProgressGoal {
+		return new ProgressGoal();
 	}
 }
 

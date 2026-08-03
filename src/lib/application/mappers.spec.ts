@@ -1,5 +1,14 @@
 import { describe, it, expect } from 'vitest';
-import { Day, DailyGoal, Entry, Habit, HabitId, OverallGoal, UnitOfWork } from '../domain/index.ts';
+import {
+	Day,
+	DailyGoal,
+	Entry,
+	Habit,
+	HabitId,
+	OverallGoal,
+	ProgressGoal,
+	UnitOfWork
+} from '../domain/index.ts';
 import { none, some } from '../shared/option.ts';
 import { expectOk } from '../shared/testing.ts';
 import { toEntryDTO, toHabitDTO } from './mappers.ts';
@@ -74,6 +83,13 @@ describe('toHabitDTO', () => {
 		const dto = toHabitDTO(habit, start);
 		expect(dto.kind).toBe('overall');
 		expect(dto.targetUnits).toBe(100);
+	});
+
+	it('maps a progress goal to a null targetUnits', () => {
+		const habit = makeHabit({ goal: ProgressGoal.of() });
+		const dto = toHabitDTO(habit, start);
+		expect(dto.kind).toBe('progress');
+		expect(dto.targetUnits).toBeNull();
 	});
 
 	it('maps a habit with no unit of work to a null unitMinutes', () => {

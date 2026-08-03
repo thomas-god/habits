@@ -11,7 +11,7 @@ export const actions: Actions = {
 			name: data.get('name') as string,
 			description: (data.get('description') as string) || null,
 			unitMinutes: unitMinutesRaw ? Number(unitMinutesRaw) : null,
-			goalKind: data.get('goalKind') as 'daily' | 'overall',
+			goalKind: data.get('goalKind') as 'daily' | 'overall' | 'progress',
 			targetUnits: Number(data.get('targetUnits')),
 			startDate: data.get('startDate') as string,
 			endDate: (data.get('endDate') as string) || null

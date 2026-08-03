@@ -9,7 +9,7 @@ export function toHabitDTO(habit: Habit, today: Day): HabitDTO {
 		description: habit.description.match({ some: (d) => d, none: () => null }),
 		unitMinutes: habit.unitOfWork.match({ some: (u) => u.minutes, none: () => null }),
 		kind: habit.kind,
-		targetUnits: habit.goal.targetUnits,
+		targetUnits: habit.goal.kind === 'progress' ? null : habit.goal.targetUnits,
 		startDate: habit.startDate.toISO(),
 		endDate: habit.endDate.match({ some: (d) => d.toISO(), none: () => null }),
 		createdAt: habit.createdAt.toISOString(),

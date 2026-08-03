@@ -40,7 +40,7 @@
 		if (units === 0) {
 			return 'not-done';
 		}
-		if (units < habit.targetUnits) {
+		if (units < (habit.targetUnits ?? 0)) {
 			return 'partial';
 		}
 		return 'done';
@@ -49,10 +49,10 @@
 
 <div class="grid gap-0.5 text-xs" style:grid-template-columns={`repeat(${nbColumns}, 16px)`}>
 	{#each days as day (day.day)}
-		{#if habit.kind === 'overall'}
-			{@render overallHabitSquare(day)}
-		{:else}
+		{#if habit.kind === 'daily'}
 			{@render dailyHabitSquare(day)}
+		{:else}
+			{@render overallHabitSquare(day)}
 		{/if}
 	{/each}
 </div>

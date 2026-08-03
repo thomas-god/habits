@@ -2,6 +2,7 @@ import {
 	Day,
 	DailyGoal,
 	OverallGoal,
+	ProgressGoal,
 	UnitOfWork,
 	type DomainError,
 	type Goal,
@@ -17,7 +18,14 @@ import { err, ok, type Result } from '../shared/result.ts';
  */
 
 export function parseGoal(kind: GoalKind, targetUnits: number): Result<Goal, DomainError> {
-	return kind === 'daily' ? DailyGoal.of(targetUnits) : OverallGoal.of(targetUnits);
+	switch (kind) {
+		case 'daily':
+			return DailyGoal.of(targetUnits);
+		case 'overall':
+			return OverallGoal.of(targetUnits);
+		case 'progress':
+			return ok(ProgressGoal.of());
+	}
 }
 
 /** `undefined`/`null` parse to "no end date"; otherwise a strict ISO date. */

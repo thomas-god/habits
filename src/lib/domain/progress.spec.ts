@@ -1,11 +1,17 @@
 import { describe, it, expect } from 'vitest';
 import { Day } from './day.ts';
-import { DailyGoal, OverallGoal } from './goal.ts';
+import { DailyGoal, OverallGoal, ProgressGoal } from './goal.ts';
 import { Habit } from './habit.ts';
 import { UnitOfWork } from './unit-of-work.ts';
 import { Entry } from './entry.ts';
 import { HabitId } from './ids.ts';
-import { dailyProgress, overallProgress, progressFor, totalUnits } from './progress.ts';
+import {
+	dailyProgress,
+	overallProgress,
+	progressFor,
+	progressGoalProgress,
+	totalUnits
+} from './progress.ts';
 import { none, some } from '../shared/option.ts';
 import { expectOk } from '../shared/testing.ts';
 
@@ -34,6 +40,19 @@ function overall(target: number, endDate = none<Day>()) {
 			goal: expectOk(OverallGoal.of(target)),
 			startDate: start,
 			endDate,
+			createdAt: new Date()
+		})
+	);
+}
+
+function progress() {
+	return expectOk(
+		Habit.from({
+			id: HabitId.generate(),
+			name: 'Journaling',
+			unitOfWork: some(unit),
+			goal: ProgressGoal.of(),
+			startDate: start,
 			createdAt: new Date()
 		})
 	);
@@ -109,6 +128,18 @@ describe('overallProgress', () => {
 	});
 });
 
+describe('progressGoalProgress', () => {
+	it('reports only the done units, with no target-derived fields', () => {
+		const p = progressGoalProgress(progress(), 7);
+		expect(p.kind).toBe('progress');
+		expect(p.doneUnits).toBe(7);
+	});
+
+	it('throws for a habit without a progress goal (programmer error)', () => {
+		expect(() => progressGoalProgress(daily(3), 1)).toThrow();
+	});
+});
+
 describe('progressFor', () => {
 	const today = expectOk(Day.fromISO('2024-06-10'));
 	const habitId = HabitId.generate();
@@ -135,6 +166,16 @@ describe('progressFor', () => {
 		];
 		const p = progressFor(overall(100), entries, today);
 		expect(p.kind).toBe('overall');
+		expect(p.doneUnits).toBe(7);
+	});
+
+	it('dispatches to progressGoalProgress summing every entry', () => {
+		const entries = [
+			expectOk(Entry.create({ habitId, day: expectOk(Day.fromISO('2024-06-09')), units: 5 })),
+			expectOk(Entry.create({ habitId, day: today, units: 2 }))
+		];
+		const p = progressFor(progress(), entries, today);
+		expect(p.kind).toBe('progress');
 		expect(p.doneUnits).toBe(7);
 	});
 });

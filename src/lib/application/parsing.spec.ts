@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { DailyGoal, InvalidValue, OverallGoal } from '../domain/index.ts';
+import { DailyGoal, InvalidValue, OverallGoal, ProgressGoal } from '../domain/index.ts';
 import { expectErr, expectOk } from '../shared/testing.ts';
 import {
 	parseGoal,
@@ -25,6 +25,11 @@ describe('parseGoal', () => {
 	it('returns Err for a non-positive target', () => {
 		expect(expectErr(parseGoal('daily', 0))).toBeInstanceOf(InvalidValue);
 		expect(parseGoal('overall', -1).ok).toBe(false);
+	});
+
+	it('returns a ProgressGoal for kind "progress", ignoring the target', () => {
+		const goal = expectOk(parseGoal('progress', 0));
+		expect(goal).toBeInstanceOf(ProgressGoal);
 	});
 });
 
