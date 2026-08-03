@@ -53,6 +53,19 @@ const MIGRATIONS: { version: number; sql: string }[] = [
 		sql: `
       ALTER TABLE habit ALTER COLUMN goal_units DROP NOT NULL;
     `
+	},
+	{
+		version: 5,
+		sql: `
+      CREATE TABLE IF NOT EXISTS habit_order (
+        habit_id TEXT    NOT NULL PRIMARY KEY REFERENCES habit(id) ON DELETE CASCADE,
+        position INTEGER NOT NULL
+      );
+
+      INSERT INTO habit_order (habit_id, position)
+      SELECT id, ROW_NUMBER() OVER (ORDER BY created_at) - 1
+      FROM habit;
+    `
 	}
 ];
 

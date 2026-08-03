@@ -5,7 +5,12 @@
 	import { formatUnitLabel } from '$lib/ui/format';
 	import UnitGrid from '$lib/ui/components/molecules/UnitGrid.svelte';
 
-	let { habitDetail }: { habitDetail: HabitWithTodayEntryDTO } = $props();
+	let {
+		habitDetail,
+		canMoveUp = false,
+		canMoveDown = false
+	}: { habitDetail: HabitWithTodayEntryDTO; canMoveUp?: boolean; canMoveDown?: boolean } =
+		$props();
 
 	let { habit, today } = $derived(habitDetail);
 
@@ -13,13 +18,11 @@
 	let endingToday = $derived(habit.endDate === today.day);
 </script>
 
-<div class="card bg-base-100 shadow-sm transition-shadow hover:shadow-md">
-	<div class="card-body gap-3 p-5">
+<div class="card flex-row bg-base-100 shadow-sm transition-shadow hover:shadow-md">
+	<div class="card-body flex-1 gap-3 p-5">
 		<!-- Header -->
 		<div class="flex items-start justify-between gap-2">
-			<div>
-				<a href="/habits/{habit.id}" class="card-title text-lg hover:underline">{habit.name}</a>
-			</div>
+			<a href="/habits/{habit.id}" class="card-title text-lg hover:underline">{habit.name}</a>
 			{#if endingToday}
 				<span class="badge badge-ghost badge-sm text-base-content/50">Ending today</span>
 			{:else if !habit.active}
@@ -60,4 +63,24 @@
 			</div>
 		</div>
 	</div>
+
+	{#if habit.active}
+		<!-- Reorder controls -->
+		<div class="flex flex-col items-center justify-center gap-1 border-l border-base-200 px-2">
+			<form method="POST" action="?/move" use:enhance>
+				<input type="hidden" name="habitId" value={habit.id} />
+				<input type="hidden" name="direction" value="up" />
+				<button class="btn btn-ghost btn-xs px-1" disabled={!canMoveUp} aria-label="Move up"
+					>▲</button
+				>
+			</form>
+			<form method="POST" action="?/move" use:enhance>
+				<input type="hidden" name="habitId" value={habit.id} />
+				<input type="hidden" name="direction" value="down" />
+				<button class="btn btn-ghost btn-xs px-1" disabled={!canMoveDown} aria-label="Move down"
+					>▼</button
+				>
+			</form>
+		</div>
+	{/if}
 </div>

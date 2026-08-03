@@ -1,13 +1,14 @@
 import { describe, it, expect } from 'vitest';
 import { Day, InvalidHabit, InvalidValue } from '../../domain/index.ts';
 import { expectErr, expectOk } from '../../shared/testing.ts';
-import { FixedClock, InMemoryHabitRepository } from '../testing.ts';
+import { FixedClock, InMemoryHabitOrderRepository, InMemoryHabitRepository } from '../testing.ts';
 import { createHabit, type CreateHabitDeps, type CreateHabitInput } from './create-habit.ts';
 
 function setup() {
 	const habits = new InMemoryHabitRepository();
+	const habitOrder = new InMemoryHabitOrderRepository();
 	const clock = new FixedClock(expectOk(Day.fromISO('2024-06-10')));
-	const deps: CreateHabitDeps = { habits, clock };
+	const deps: CreateHabitDeps = { habits, habitOrder, clock };
 	return { deps, habits, clock };
 }
 

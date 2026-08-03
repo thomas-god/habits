@@ -3,6 +3,7 @@ import { ok, type Result } from '../shared/result.ts';
 import type { Clock } from './ports/clock.ts';
 import type { CorruptRecord } from './ports/errors.ts';
 import type { EntryRepository } from './ports/entry-repository.ts';
+import type { HabitOrderRepository } from './ports/habit-order-repository.ts';
 import type { HabitRepository } from './ports/habit-repository.ts';
 import type { Logger } from './ports/logger.ts';
 
@@ -29,6 +30,26 @@ export class InMemoryHabitRepository implements HabitRepository {
 
 	async delete(id: HabitId): Promise<void> {
 		this.byId.delete(id.value);
+	}
+}
+
+export class InMemoryHabitOrderRepository implements HabitOrderRepository {
+	private order: HabitId[] = [];
+
+	async list(): Promise<Result<HabitId[], CorruptRecord>> {
+		return ok([...this.order]);
+	}
+
+	async save(order: HabitId[]): Promise<void> {
+		this.order = [...order];
+	}
+
+	async append(id: HabitId): Promise<void> {
+		this.order.push(id);
+	}
+
+	async remove(id: HabitId): Promise<void> {
+		this.order = this.order.filter((existing) => !existing.equals(id));
 	}
 }
 

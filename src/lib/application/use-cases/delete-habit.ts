@@ -1,6 +1,7 @@
 import { HabitId, type DomainError } from '../../domain/index.ts';
 import { err, ok, type Result } from '../../shared/result.ts';
 import { HabitNotFound, type CorruptRecord } from '../ports/errors.ts';
+import type { HabitOrderRepository } from '../ports/habit-order-repository.ts';
 import type { HabitRepository } from '../ports/habit-repository.ts';
 
 export interface DeleteHabitInput {
@@ -11,6 +12,7 @@ export type DeleteHabitError = DomainError | HabitNotFound | CorruptRecord;
 
 export interface DeleteHabitDeps {
 	habits: HabitRepository;
+	habitOrder: HabitOrderRepository;
 }
 
 /** Permanently remove a habit and (per the schema) its recorded entries. */
@@ -26,5 +28,6 @@ export async function deleteHabit(
 	if (!habitResult.value) return err(new HabitNotFound(input.habitId));
 
 	await deps.habits.delete(idResult.value);
+	await deps.habitOrder.remove(idResult.value);
 	return ok(undefined);
 }

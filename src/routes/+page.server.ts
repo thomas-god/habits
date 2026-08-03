@@ -17,5 +17,14 @@ export const actions: Actions = {
 
 		const result = await useCases.recordEntry({ habitId, delta });
 		if (!result.ok) return fail(400, { error: result.error.message });
+	},
+
+	move: async ({ request }) => {
+		const data = await request.formData();
+		const habitId = data.get('habitId') as string;
+		const direction = data.get('direction') as 'up' | 'down';
+
+		const result = await useCases.moveHabit({ habitId, direction });
+		if (!result.ok) return fail(400, { error: result.error.message });
 	}
 };

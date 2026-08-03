@@ -1,6 +1,7 @@
 import { openDatabase } from './db/database.ts';
 import { runMigrations } from './db/migrations.ts';
 import { SqliteHabitRepository } from './db/sqlite-habit-repository.ts';
+import { SqliteHabitOrderRepository } from './db/sqlite-habit-order-repository.ts';
 import { SqliteEntryRepository } from './db/sqlite-entry-repository.ts';
 import { SystemClock } from './system-clock.ts';
 import { JsonLogger } from './json-logger.ts';
@@ -19,10 +20,11 @@ function buildContainer(dbPath?: string) {
 
 	const logger = new JsonLogger();
 	const habits = new SqliteHabitRepository(db, logger);
+	const habitOrder = new SqliteHabitOrderRepository(db, logger);
 	const entries = new SqliteEntryRepository(db, logger);
 	const clock = new SystemClock();
 
-	const deps = { habits, entries, clock };
+	const deps = { habits, habitOrder, entries, clock };
 
 	// Lazily import use cases to keep the module graph clean (avoids importing
 	// all use-case modules into every file that touches the container).

@@ -3,16 +3,23 @@ import { Day } from '../../domain/index.ts';
 import { expectOk } from '../../shared/testing.ts';
 import { createHabit } from './create-habit.ts';
 import { endHabit } from './end-habit.ts';
+import { moveHabit } from './move-habit-order.ts';
 import { recordEntry } from './record-entry.ts';
 import { listHabitsWithTodayEntry } from './list-habits-with-today-entry.ts';
-import { FixedClock, InMemoryEntryRepository, InMemoryHabitRepository } from '../testing.ts';
+import {
+	FixedClock,
+	InMemoryEntryRepository,
+	InMemoryHabitOrderRepository,
+	InMemoryHabitRepository
+} from '../testing.ts';
 
 async function setup() {
 	const habits = new InMemoryHabitRepository();
+	const habitOrder = new InMemoryHabitOrderRepository();
 	const entries = new InMemoryEntryRepository();
 	const clock = new FixedClock(expectOk(Day.fromISO('2024-06-10')));
-	const deps = { habits, entries, clock };
-	return { deps, habits, entries, clock };
+	const deps = { habits, habitOrder, entries, clock };
+	return { deps, habits, habitOrder, entries, clock };
 }
 
 describe('listHabitsWithTodayEntry', () => {
@@ -94,7 +101,7 @@ describe('listHabitsWithTodayEntry', () => {
 	it('excludes ended habits by default (from the day after ending)', async () => {
 		// The end day itself is still within [start, end] (inclusive), so we
 		// list "the day after" to observe the habit becoming inactive.
-		const { deps, habits, entries } = await setup();
+		const { deps, habits, habitOrder, entries } = await setup();
 		const habit = expectOk(
 			await createHabit(deps, {
 				name: 'Piano',
@@ -108,6 +115,7 @@ describe('listHabitsWithTodayEntry', () => {
 
 		const nextDayDeps = {
 			habits,
+			habitOrder,
 			entries,
 			clock: new FixedClock(expectOk(Day.fromISO('2024-06-11')))
 		};
@@ -115,7 +123,7 @@ describe('listHabitsWithTodayEntry', () => {
 	});
 
 	it('includes ended habits when requested', async () => {
-		const { deps, habits, entries } = await setup();
+		const { deps, habits, habitOrder, entries } = await setup();
 		const habit = expectOk(
 			await createHabit(deps, {
 				name: 'Piano',
@@ -129,6 +137,7 @@ describe('listHabitsWithTodayEntry', () => {
 
 		const nextDayDeps = {
 			habits,
+			habitOrder,
 			entries,
 			clock: new FixedClock(expectOk(Day.fromISO('2024-06-11')))
 		};
@@ -174,7 +183,7 @@ describe('listHabitsWithTodayEntry', () => {
 	});
 
 	it("only includes today's entry, not entries from other days", async () => {
-		const { deps, habits, entries } = await setup();
+		const { deps, habits, habitOrder, entries } = await setup();
 		const habit = expectOk(
 			await createHabit(deps, {
 				name: 'Piano',
@@ -188,6 +197,7 @@ describe('listHabitsWithTodayEntry', () => {
 		// Record entry for yesterday
 		const yesterdayDeps = {
 			habits,
+			habitOrder,
 			entries,
 			clock: new FixedClock(expectOk(Day.fromISO('2024-06-09')))
 		};
@@ -201,7 +211,7 @@ describe('listHabitsWithTodayEntry', () => {
 	});
 
 	it('uses the correct today entry when multiple entries exist', async () => {
-		const { deps, habits, entries } = await setup();
+		const { deps, habits, habitOrder, entries } = await setup();
 		const habit = expectOk(
 			await createHabit(deps, {
 				name: 'Piano',
@@ -215,6 +225,7 @@ describe('listHabitsWithTodayEntry', () => {
 		// Record entries for multiple days
 		const june8Deps = {
 			habits,
+			habitOrder,
 			entries,
 			clock: new FixedClock(expectOk(Day.fromISO('2024-06-08')))
 		};
@@ -222,6 +233,7 @@ describe('listHabitsWithTodayEntry', () => {
 
 		const june9Deps = {
 			habits,
+			habitOrder,
 			entries,
 			clock: new FixedClock(expectOk(Day.fromISO('2024-06-09')))
 		};
@@ -251,5 +263,56 @@ describe('listHabitsWithTodayEntry', () => {
 		const list = expectOk(await listHabitsWithTodayEntry(deps));
 		expect(list).toHaveLength(1);
 		expect(list[0].habit.active).toBe(true);
+	});
+
+	it('returns habits in creation order by default', async () => {
+		const { deps } = await setup();
+		const piano = expectOk(
+			await createHabit(deps, {
+				name: 'Piano',
+				unitMinutes: 45,
+				goalKind: 'daily',
+				targetUnits: 4,
+				startDate: '2024-06-01'
+			})
+		);
+		const running = expectOk(
+			await createHabit(deps, {
+				name: 'Running',
+				unitMinutes: 30,
+				goalKind: 'daily',
+				targetUnits: 2,
+				startDate: '2024-06-01'
+			})
+		);
+
+		const list = expectOk(await listHabitsWithTodayEntry(deps));
+		expect(list.map((h) => h.habit.id)).toEqual([piano.id, running.id]);
+	});
+
+	it('reflects the order after moving a habit', async () => {
+		const { deps } = await setup();
+		const piano = expectOk(
+			await createHabit(deps, {
+				name: 'Piano',
+				unitMinutes: 45,
+				goalKind: 'daily',
+				targetUnits: 4,
+				startDate: '2024-06-01'
+			})
+		);
+		const running = expectOk(
+			await createHabit(deps, {
+				name: 'Running',
+				unitMinutes: 30,
+				goalKind: 'daily',
+				targetUnits: 2,
+				startDate: '2024-06-01'
+			})
+		);
+		expectOk(await moveHabit(deps, { habitId: running.id, direction: 'up' }));
+
+		const list = expectOk(await listHabitsWithTodayEntry(deps));
+		expect(list.map((h) => h.habit.id)).toEqual([running.id, piano.id]);
 	});
 });

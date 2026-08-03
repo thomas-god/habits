@@ -4,12 +4,13 @@ import { expectErr, expectOk } from '../../shared/testing.ts';
 import { createHabit } from './create-habit.ts';
 import { editHabit } from './edit-habit.ts';
 import { HabitNotFound } from '../ports/errors.ts';
-import { FixedClock, InMemoryHabitRepository } from '../testing.ts';
+import { FixedClock, InMemoryHabitOrderRepository, InMemoryHabitRepository } from '../testing.ts';
 
 async function setup() {
 	const habits = new InMemoryHabitRepository();
+	const habitOrder = new InMemoryHabitOrderRepository();
 	const clock = new FixedClock(expectOk(Day.fromISO('2024-06-10')));
-	const deps = { habits, clock };
+	const deps = { habits, habitOrder, clock };
 
 	const habit = expectOk(
 		await createHabit(deps, {

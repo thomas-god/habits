@@ -2,19 +2,25 @@ import { describe, it, expect } from 'vitest';
 import { Day, HabitId, InvalidValue } from '../../domain/index.ts';
 import { expectErr, expectOk } from '../../shared/testing.ts';
 import { createHabit } from './create-habit.ts';
-import { FixedClock, InMemoryEntryRepository, InMemoryHabitRepository } from '../testing.ts';
+import {
+	FixedClock,
+	InMemoryEntryRepository,
+	InMemoryHabitOrderRepository,
+	InMemoryHabitRepository
+} from '../testing.ts';
 import { EntryDayOutOfRange, HabitNotFound } from '../ports/errors.ts';
 import { recordEntry, type RecordEntryDeps } from './record-entry.ts';
 
 async function setup() {
 	const habits = new InMemoryHabitRepository();
+	const habitOrder = new InMemoryHabitOrderRepository();
 	const entries = new InMemoryEntryRepository();
 	const clock = new FixedClock(expectOk(Day.fromISO('2024-06-10')));
 	const deps: RecordEntryDeps = { habits, entries, clock };
 
 	const habit = expectOk(
 		await createHabit(
-			{ habits, clock },
+			{ habits, habitOrder, clock },
 			{
 				name: 'Piano',
 				unitMinutes: 45,
@@ -24,7 +30,7 @@ async function setup() {
 			}
 		)
 	);
-	return { deps, habits, entries, clock, habitId: habit.id };
+	return { deps, habits, habitOrder, entries, clock, habitId: habit.id };
 }
 
 describe('recordEntry', () => {
@@ -102,10 +108,10 @@ describe('recordEntry', () => {
 	});
 
 	it('rejects a day after the habit end date', async () => {
-		const { deps, habits, clock } = await setup();
+		const { deps, habits, habitOrder, clock } = await setup();
 		const habit = expectOk(
 			await createHabit(
-				{ habits, clock },
+				{ habits, habitOrder, clock },
 				{
 					name: 'Guitar',
 					unitMinutes: 45,
@@ -123,10 +129,10 @@ describe('recordEntry', () => {
 	});
 
 	it('accepts the start and end dates themselves (inclusive)', async () => {
-		const { deps, habits, clock } = await setup();
+		const { deps, habits, habitOrder, clock } = await setup();
 		const habit = expectOk(
 			await createHabit(
-				{ habits, clock },
+				{ habits, habitOrder, clock },
 				{
 					name: 'Guitar',
 					unitMinutes: 45,
@@ -146,13 +152,13 @@ describe('recordEntry', () => {
 	});
 
 	it('allows logging a day within range even after the habit has ended', async () => {
-		const { habits } = await setup();
+		const { habits, habitOrder } = await setup();
 		const endedClock = new FixedClock(expectOk(Day.fromISO('2024-06-20'))); // after end date
 		const entries = new InMemoryEntryRepository();
 		const deps: RecordEntryDeps = { habits, entries, clock: endedClock };
 		const habit = expectOk(
 			await createHabit(
-				{ habits, clock: endedClock },
+				{ habits, habitOrder, clock: endedClock },
 				{
 					name: 'Guitar',
 					unitMinutes: 45,

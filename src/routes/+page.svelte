@@ -3,6 +3,10 @@
 	import HabitCard from '$lib/ui/components/organisms/HabitCard.svelte';
 
 	let { data }: { data: PageData } = $props();
+
+	let activeIds = $derived(
+		data.habits.filter((h) => h.habit.active).map((h) => h.habit.id)
+	);
 </script>
 
 <div class="mb-6 flex items-center justify-between">
@@ -26,7 +30,11 @@
 {:else}
 	<div class="flex flex-col gap-4">
 		{#each data.habits as habitDetail (habitDetail.habit.id)}
-			<HabitCard {habitDetail} />
+			<HabitCard
+				{habitDetail}
+				canMoveUp={activeIds[0] !== habitDetail.habit.id}
+				canMoveDown={activeIds[activeIds.length - 1] !== habitDetail.habit.id}
+			/>
 		{/each}
 	</div>
 {/if}

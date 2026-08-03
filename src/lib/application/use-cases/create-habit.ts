@@ -1,6 +1,7 @@
 import { Habit, HabitId, type DomainError, type GoalKind } from '../../domain/index.ts';
 import { err, ok, type Result } from '../../shared/result.ts';
 import type { Clock } from '../ports/clock.ts';
+import type { HabitOrderRepository } from '../ports/habit-order-repository.ts';
 import type { HabitRepository } from '../ports/habit-repository.ts';
 import type { HabitDTO } from '../dto.ts';
 import { toHabitDTO } from '../mappers.ts';
@@ -20,6 +21,7 @@ export type CreateHabitError = DomainError;
 
 export interface CreateHabitDeps {
 	habits: HabitRepository;
+	habitOrder: HabitOrderRepository;
 	clock: Clock;
 }
 
@@ -45,5 +47,6 @@ export async function createHabit(
 	if (!habitResult.ok) return err(habitResult.error);
 
 	await deps.habits.save(habitResult.value);
+	await deps.habitOrder.append(habitResult.value.id);
 	return ok(toHabitDTO(habitResult.value, deps.clock.today()));
 }

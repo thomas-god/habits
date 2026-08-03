@@ -5,13 +5,19 @@ import { createHabit } from './create-habit.ts';
 import { recordEntry } from './record-entry.ts';
 import { getHabitDetail } from './get-habit-detail.ts';
 import { HabitNotFound } from '../ports/errors.ts';
-import { FixedClock, InMemoryEntryRepository, InMemoryHabitRepository } from '../testing.ts';
+import {
+	FixedClock,
+	InMemoryEntryRepository,
+	InMemoryHabitOrderRepository,
+	InMemoryHabitRepository
+} from '../testing.ts';
 
 async function setup() {
 	const habits = new InMemoryHabitRepository();
+	const habitOrder = new InMemoryHabitOrderRepository();
 	const entries = new InMemoryEntryRepository();
 	const clock = new FixedClock(expectOk(Day.fromISO('2024-06-10')));
-	const deps = { habits, entries, clock };
+	const deps = { habits, habitOrder, entries, clock };
 
 	const habit = expectOk(
 		await createHabit(deps, {

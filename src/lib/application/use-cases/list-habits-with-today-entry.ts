@@ -3,6 +3,7 @@ import { err, ok, type Result } from '../../shared/result.ts';
 import type { Clock } from '../ports/clock.ts';
 import type { CorruptRecord } from '../ports/errors.ts';
 import type { EntryRepository } from '../ports/entry-repository.ts';
+import type { HabitOrderRepository } from '../ports/habit-order-repository.ts';
 import type { HabitRepository } from '../ports/habit-repository.ts';
 import type { HabitWithTodayEntryDTO } from '../dto.ts';
 import { toEntryDTO, toHabitDTO } from '../mappers.ts';
@@ -17,11 +18,12 @@ export type ListHabitsWithTodayEntryError = CorruptRecord;
 
 export interface ListHabitsWithTodayEntryDeps {
 	habits: HabitRepository;
+	habitOrder: HabitOrderRepository;
 	entries: EntryRepository;
 	clock: Clock;
 }
 
-/** Every (by default, active) habit paired with its entry for today. */
+/** Every (by default, active) habit paired with its entry for today, in display order. */
 export async function listHabitsWithTodayEntry(
 	deps: ListHabitsWithTodayEntryDeps,
 	input: ListHabitsWithTodayEntryInput = {}
@@ -33,6 +35,13 @@ export async function listHabitsWithTodayEntry(
 	const habits = input.includeEnded
 		? habitsResult.value
 		: habitsResult.value.filter((habit) => habit.isActive(today));
+
+	const orderResult = await deps.habitOrder.list();
+	if (!orderResult.ok) return err(orderResult.error);
+	const position = new Map(orderResult.value.map((id, index) => [id.value, index]));
+	habits.sort(
+		(a, b) => (position.get(a.id.value) ?? Infinity) - (position.get(b.id.value) ?? Infinity)
+	);
 
 	const results: HabitWithTodayEntryDTO[] = [];
 	for (const habit of habits) {
