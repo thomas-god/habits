@@ -13,15 +13,25 @@
 	let endDay = $derived(habit.endDate === null ? today : parseDay(habit.endDate));
 	let max = $derived(Math.max(...entries.map((e) => e.units)));
 
-	let days = $derived.by(() => {
-		const days = [];
+	type HistorySquare =
+		| { kind: 'out-of-range'; day: dayjs.Dayjs; column: number; row: number }
+		| { kind: 'in-range'; day: dayjs.Dayjs; units: number; column: number; row: number };
+	let days: HistorySquare[] = $derived.by(() => {
+		const days: HistorySquare[] = [];
 		let column = 1;
-		for (let day = startDay; day <= endDay; day = day.add(1, 'day')) {
+		const start = startDay.startOf('week');
+		const end = endDay.endOf('week');
+		for (let day = start; day <= end; day = day.add(1, 'day')) {
+			if (day.isBefore(startDay) || day.isAfter(endDay)) {
+				days.push({ kind: 'out-of-range', day, column: column, row: day.isoWeekday() });
+				continue;
+			}
 			const units = asOption(entries.find((e) => parseDay(e.day).isSame(day)))
 				.map((e) => e.units)
 				.unwrapOr(0);
 
 			days.push({
+				kind: 'in-range',
 				day,
 				units,
 				column: column,
@@ -49,13 +59,19 @@
 
 <div class="grid gap-0.5 text-xs" style:grid-template-columns={`repeat(${nbColumns}, 16px)`}>
 	{#each days as day (day.day)}
-		{#if habit.kind === 'daily'}
+		{#if day.kind === 'out-of-range'}
+			{@render outOfRangeSquare(day)}
+		{:else if habit.kind === 'daily'}
 			{@render dailyHabitSquare(day)}
 		{:else}
 			{@render overallHabitSquare(day)}
 		{/if}
 	{/each}
 </div>
+
+{#snippet outOfRangeSquare({ row, column }: { day: dayjs.Dayjs; row: number; column: number })}
+	<div class="h-4 w-4 rounded-sm border-none" style:grid-row={row} style:grid-column={column}></div>
+{/snippet}
 
 {#snippet overallHabitSquare({
 	day,
